@@ -1,0 +1,102 @@
+import type { Card, SwipeRecord } from "../types";
+import { F } from "../lib";
+
+function Stat({ label, value, color = "#A78BFA" }: { label: string; value: number; color?: string }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "18px 16px", flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: 28, fontWeight: 900, color, fontFamily: F }}>{value}</div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,.55)", marginTop: 2, fontFamily: F }}>{label}</div>
+    </div>
+  );
+}
+
+const CAT_COLORS: Record<string, string> = {
+  Фильм: "#7C3AED",
+  Место: "#059669",
+  Скидка: "#E11D48",
+  Книга: "#D97706",
+  Игра: "#0EA5E9",
+  "Актив.": "#F59E0B",
+};
+
+export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]; saved: Card[]; onBack: () => void }) {
+  const total = history.length;
+  const liked = history.filter((h) => h.dir === "right").length;
+  const nope = history.filter((h) => h.dir === "left").length;
+
+  const catCounts: Record<string, number> = {};
+  history.filter((h) => h.dir === "right").forEach((h) => {
+    catCounts[h.card.catLabel] = (catCounts[h.card.catLabel] || 0) + 1;
+  });
+  const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+  const maxCat = catEntries[0]?.[1] || 1;
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
+      <div style={{ padding: "50px 20px 14px", display: "flex", alignItems: "center", gap: 12 }}>
+        <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
+        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Статистика</div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {total === 0 ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.45 }}>
+            <div style={{ fontSize: 44 }}>📊</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", fontFamily: F }}>Пока нет данных</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>Свайпай карточки чтобы увидеть статистику</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", gap: 10 }}>
+              <Stat label="Всего свайпов" value={total} color="#A78BFA" />
+              <Stat label="Понравилось" value={liked} color="#22C55E" />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <Stat label="Пропущено" value={nope} color="#EF4444" />
+              <Stat label="Сохранено" value={saved.length} color="#FCD34D" />
+            </div>
+            <div style={{ background: "rgba(124,58,237,.09)", border: "1px solid rgba(124,58,237,.18)", borderRadius: 18, padding: "18px 16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,.65)", fontFamily: F }}>Рейтинг лайков</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "#A78BFA", fontFamily: F }}>{Math.round((liked / total) * 100)}%</span>
+              </div>
+              <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 99, height: 8, overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg,#7C3AED,#A78BFA)", width: `${Math.round((liked / total) * 100)}%`, transition: "width 1s ease" }} />
+              </div>
+            </div>
+            {catEntries.length > 0 && (
+              <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 18, padding: "18px 16px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", marginBottom: 14, fontFamily: F }}>По категориям</div>
+                {catEntries.map(([cat, count]) => (
+                  <div key={cat} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)", fontFamily: F }}>{cat}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: CAT_COLORS[cat] || "#A78BFA", fontFamily: F }}>{count}</span>
+                    </div>
+                    <div style={{ background: "rgba(255,255,255,.07)", borderRadius: 99, height: 6, overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: CAT_COLORS[cat] || "#7C3AED", width: `${(count / maxCat) * 100}%`, transition: "width 1s ease" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {liked > 0 && (
+              <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 18, padding: "18px 16px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", marginBottom: 12, fontFamily: F }}>Последние лайки</div>
+                {history
+                  .filter((h) => h.dir === "right")
+                  .slice(-4)
+                  .reverse()
+                  .map((h) => (
+                    <div key={h.card.id} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,.05)" }}>
+                      <span style={{ fontSize: 18 }}>{h.card.emoji}</span>
+                      <span style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontFamily: F }}>{h.card.title}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

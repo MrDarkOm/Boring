@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: #080810; }
+
+@keyframes splashPulse { 0%,100%{transform:scale(.92);opacity:.6} 50%{transform:scale(1.08);opacity:1} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes popIn { 0%{transform:scale(.4);opacity:0} 70%{transform:scale(1.12)} 100%{transform:scale(1);opacity:1} }
+@keyframes cardIn { from{opacity:0;transform:translateY(36px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes confetti { 0%{transform:translateY(0) rotate(0)} 100%{transform:translateY(-130px) rotate(720deg);opacity:0} }
+@keyframes aiPulse { 0%,100%{opacity:.45} 50%{opacity:1} }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+@keyframes notifSlide { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes ping { 0%{transform:scale(1);opacity:1} 75%,100%{transform:scale(2.2);opacity:0} }
+
+.fade-up { animation: fadeUp .38s ease both; }
+.fade-in { animation: fadeIn .28s ease both; }
+.card-in { animation: cardIn .42s cubic-bezier(.34,1.4,.64,1) both; }
+.pop-in { animation: popIn .5s cubic-bezier(.34,1.6,.64,1) both; }
+.action-btn { transition: transform .15s, opacity .15s; }
+.action-btn:active { transform: scale(.87); opacity: .75; }
+.swipe-btn:active { transform: scale(.85); }
+.tab-btn:active { transform: scale(.9); }
+.ping { animation: ping 1.4s cubic-bezier(0,0,.2,1) infinite; }
+
+::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
