@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import type { Card, Notifs, Profile, SwipeRecord, UserContext } from "./types";
+import type { Card } from "./types";
 import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
+import { useAppStore } from "./store";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
 import { SwipeScreen } from "./screens/SwipeScreen";
@@ -18,21 +19,22 @@ import { Toast } from "./components/Toast";
 export default function App() {
   const [phase, setPhase] = useState<"splash" | "onboard" | "main">("splash");
   const [tab, setTab] = useState("swipe");
-  const [context, setCtx] = useState<UserContext>({ mood: null, people: null, time: null, genres: [] });
   const [matched, setMatch] = useState<Card | null>(null);
-  const [saved, setSaved] = useState<Card[]>([]);
-  const [swipeHistory, setHist] = useState<SwipeRecord[]>([]);
   const [openSaved, setOpenSaved] = useState<Card | null>(null);
-  const [comments, setComments] = useState<Record<number, string>>({});
-  const [notifs, setNotifs] = useState<Notifs>({ evening: true, sales: true, places: false });
-  const [profile, setProfile] = useState<Profile>({ name: "Пользователь", avatar: "🧑" });
   const [toast, setToast] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
 
-  const addSaved = (c: Card) => setSaved((s) => (s.find((x) => x.id === c.id) ? s : [...s, c]));
-  const addComment = (id: number, txt: string) => setComments((c) => ({ ...c, [id]: txt }));
+  const {
+    profile, setProfile,
+    notifs, setNotifs,
+    saved, addSaved,
+    swipeHistory, setSwipeHistory,
+    comments, addComment,
+    context, setContext,
+    reset,
+  } = useAppStore();
 
   useEffect(() => {
     if (phase === "main" && notifs.evening) {
@@ -42,9 +44,7 @@ export default function App() {
   }, [phase, notifs.evening]);
 
   const handleReset = () => {
-    setSaved([]);
-    setHist([]);
-    setComments({});
+    reset();
     setToast("История и сохранения сброшены");
   };
 
@@ -69,7 +69,7 @@ export default function App() {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
-          {phase === "onboard" && <Onboarding onDone={(ctx) => { setCtx(ctx); setPhase("main"); }} />}
+          {phase === "onboard" && <Onboarding onDone={(ctx) => { setContext(ctx); setPhase("main"); }} />}
 
           {phase === "main" && !matched && !openSaved && (
             <>
@@ -82,7 +82,7 @@ export default function App() {
                   onSaved={addSaved}
                   savedCount={saved.length}
                   swipeHistory={swipeHistory}
-                  onSwipeHistory={setHist}
+                  onSwipeHistory={setSwipeHistory}
                   setTab={setTab}
                   onSurprise={() => setSurprise(true)}
                 />
