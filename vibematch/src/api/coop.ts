@@ -7,7 +7,7 @@ function makeCode(): string {
 // ─── Create a coop session (host) ─────────────────────────────────────────────
 export async function createCoopSession(hostId: string): Promise<string | null> {
   const code = makeCode();
-  const { data, error } = await supabase
+  const { data, error } = await supabase!
     .from("coop_sessions")
     .insert({ code, host_id: hostId, status: "waiting" })
     .select("code")
@@ -18,7 +18,7 @@ export async function createCoopSession(hostId: string): Promise<string | null> 
 
 // ─── Join a coop session (guest) ──────────────────────────────────────────────
 export async function joinCoopSession(code: string, guestId: string): Promise<string | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase!
     .from("coop_sessions")
     .update({ guest_id: guestId, status: "active" })
     .eq("code", code)
@@ -31,6 +31,7 @@ export async function joinCoopSession(code: string, guestId: string): Promise<st
 
 // ─── Get session by code ──────────────────────────────────────────────────────
 export async function getCoopSession(code: string) {
+  if (!supabase) return null;
   const { data } = await supabase
     .from("coop_sessions")
     .select("*")
@@ -41,11 +42,12 @@ export async function getCoopSession(code: string) {
 
 // ─── Submit a swipe in coop ───────────────────────────────────────────────────
 export async function coopSwipe(sessionId: string, userId: string, cardId: number, direction: "left" | "right" | "up") {
-  await supabase.from("coop_swipes").insert({ session_id: sessionId, user_id: userId, card_id: cardId, direction });
+  await supabase!.from("coop_swipes").insert({ session_id: sessionId, user_id: userId, card_id: cardId, direction });
 }
 
 // ─── Check for match (both swiped right on same card) ────────────────────────
 export async function checkCoopMatch(sessionId: string, cardId: number): Promise<boolean> {
+  if (!supabase) return false;
   const { data } = await supabase
     .from("coop_swipes")
     .select("user_id")

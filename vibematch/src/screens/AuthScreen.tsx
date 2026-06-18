@@ -14,6 +14,7 @@ export function AuthScreen({ onSkip }: Props) {
 
   const sendMagicLink = async () => {
     if (!email.trim()) return;
+    if (!supabase) { setError("Auth not configured (no Supabase URL)"); return; }
     setLoading(true);
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({
@@ -26,6 +27,7 @@ export function AuthScreen({ onSkip }: Props) {
   };
 
   const signInWithGoogle = async () => {
+    if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.href },

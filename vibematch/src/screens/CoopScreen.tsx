@@ -25,9 +25,9 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
 
   // Realtime: listen for guest joining (host side)
   useEffect(() => {
-    if (phase !== "waiting" || !code) return;
+    if (phase !== "waiting" || !code || !supabase) return;
 
-    const channel = supabase
+    const channel = supabase!
       .channel(`coop:${code}`)
       .on("postgres_changes", {
         event: "UPDATE",
@@ -43,11 +43,12 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { supabase!.removeChannel(channel); };
   }, [phase, code]);
 
   // Realtime: listen for match events
   const listenForMatch = useCallback((sid: string, cardId: number) => {
+    if (!supabase) return () => {};
     const channel = supabase
       .channel(`match:${sid}:${cardId}`)
       .on("postgres_changes", {
@@ -61,12 +62,12 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
           const matchedCard = ALL_CARDS.find((c) => c.id === cardId) ?? ALL_CARDS[0];
           setResult(matchedCard);
           setPhase("result");
-          supabase.removeChannel(channel);
+          supabase!.removeChannel(channel);
         }
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { supabase!.removeChannel(channel); };
   }, []);
 
   const handleCreate = async () => {

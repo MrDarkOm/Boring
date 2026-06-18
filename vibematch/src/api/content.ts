@@ -35,7 +35,7 @@ export async function fetchTmdbCards(action: "trending" | "search", query?: stri
   try {
     const params = new URLSearchParams({ action });
     if (query) params.set("q", query);
-    const { data, error } = await supabase.functions.invoke("tmdb", { body: undefined, headers: {}, method: "GET" });
+    const { data, error } = await supabase!.functions.invoke("tmdb", { body: undefined, headers: {}, method: "GET" });
     // fallback: call function URL directly if invoke fails
     if (error || !data) {
       const url = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/tmdb?${params}`;

@@ -5,12 +5,14 @@ import type { Profile } from "../types";
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
 export async function syncProfile(userId: string, profile: Profile, context: UserContext) {
+  if (!supabase) return;
   await supabase
     .from("profiles")
     .upsert({ id: userId, name: profile.name, avatar: profile.avatar, context }, { onConflict: "id" });
 }
 
 export async function loadProfile(userId: string): Promise<{ profile: Profile; context: UserContext } | null> {
+  if (!supabase) return null;
   const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
   if (!data) return null;
   return {
@@ -22,7 +24,7 @@ export async function loadProfile(userId: string): Promise<{ profile: Profile; c
 // ─── Saved items ─────────────────────────────────────────────────────────────
 
 export async function syncSaved(userId: string, saved: Card[]) {
-  // Delete all, then re-insert — simple idempotent upsert
+  if (!supabase) return;
   await supabase.from("saved_items").delete().eq("user_id", userId);
   if (!saved.length) return;
   await supabase.from("saved_items").insert(
@@ -31,11 +33,13 @@ export async function syncSaved(userId: string, saved: Card[]) {
 }
 
 export async function loadSaved(userId: string): Promise<Card[]> {
+  if (!supabase) return [];
   const { data } = await supabase.from("saved_items").select("card_data").eq("user_id", userId);
   return (data ?? []).map((r) => r.card_data as unknown as Card);
 }
 
 export async function updateComment(userId: string, cardId: number, comment: string) {
+  if (!supabase) return;
   await supabase
     .from("saved_items")
     .update({ comment })
@@ -46,6 +50,7 @@ export async function updateComment(userId: string, cardId: number, comment: str
 // ─── Swipe history ────────────────────────────────────────────────────────────
 
 export async function syncHistory(userId: string, history: SwipeRecord[]) {
+  if (!supabase) return;
   await supabase.from("swipe_history").delete().eq("user_id", userId);
   if (!history.length) return;
   await supabase.from("swipe_history").insert(
@@ -59,6 +64,7 @@ export async function syncHistory(userId: string, history: SwipeRecord[]) {
 }
 
 export async function loadHistory(userId: string): Promise<SwipeRecord[]> {
+  if (!supabase) return [];
   const { data } = await supabase
     .from("swipe_history")
     .select("card_data, direction")
