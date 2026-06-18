@@ -100,13 +100,15 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0" }}>
+    <div className="app-shell" style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
-          width: 390,
-          minHeight: 844,
+          width: "min(390px, 100vw)",
+          minHeight: "min(844px, 100dvh)",
+          maxHeight: "100dvh",
           background: "#0D0D0D",
-          borderRadius: 46,
+          // Rounded corners only on desktop (native app uses safe-area instead)
+          borderRadius: "clamp(0px, calc((100vw - 391px) * 999), 46px)",
           overflow: "hidden",
           position: "relative",
           fontFamily: F,
