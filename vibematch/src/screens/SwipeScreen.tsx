@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import type { Card, Geo, SwipeDir, SwipeRecord, UserContext, Weather } from "../types";
 import { ALL_CARDS, MOODS } from "../data";
 import { F, fetchAiTip } from "../lib";
+import { rankCards } from "../lib/scoring";
 import { Glow, Tag } from "../components/ui";
 
 interface Props {
@@ -40,17 +41,13 @@ export function SwipeScreen({
   const [deckDone, setDeckDone] = useState(false);
   const startRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Score-based filtering: prefer matching cards, fallback to all cards if < 4 remain
-  const scored = allCards.map((c) => {
-    let score = 0;
-    if (c.weather.includes("any") || c.weather.includes(weather.id)) score += 2;
-    if (context.genres?.length && c.genres.some((g) => context.genres.includes(g))) score += 3;
-    return { c, score };
-  })
-    .sort((a, b) => b.score - a.score);
-
-  const filtered = scored.filter((x) => x.score > 0).map((x) => x.c);
-  const cards = filtered.length >= 4 ? filtered : allCards;
+  // Full scoring engine: weather + genres + time-of-day + mood + swipe-history learning
+  const cards = useMemo(
+    () => rankCards(allCards, context, weather, swipeHistory),
+    // Re-rank only when context or weather changes (not every swipe to avoid flicker)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allCards, context, weather]
+  );
 
   const card = deckDone ? null : cards[idx];
   const nextC = cards[(idx + 1) % cards.length];
