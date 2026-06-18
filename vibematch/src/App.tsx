@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import type { Card } from "./types";
 import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
+import { useAuth } from "./hooks/useAuth";
 import { useAppStore } from "./store";
+import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory } from "./api/sync";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
+import { AuthScreen } from "./screens/AuthScreen";
 import { SwipeScreen } from "./screens/SwipeScreen";
 import { MatchScreen } from "./screens/MatchScreen";
 import { SavedScreen } from "./screens/SavedScreen";
@@ -16,8 +19,10 @@ import { SurpriseModal } from "./screens/SurpriseModal";
 import { NavBar } from "./components/NavBar";
 import { Toast } from "./components/Toast";
 
+type Phase = "splash" | "onboard" | "auth" | "main";
+
 export default function App() {
-  const [phase, setPhase] = useState<"splash" | "onboard" | "main">("splash");
+  const [phase, setPhase] = useState<Phase>("splash");
   const [tab, setTab] = useState("swipe");
   const [matched, setMatch] = useState<Card | null>(null);
   const [openSaved, setOpenSaved] = useState<Card | null>(null);
@@ -25,6 +30,7 @@ export default function App() {
   const [surprise, setSurprise] = useState(false);
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
+  const { user } = useAuth();
 
   const {
     profile, setProfile,
@@ -35,6 +41,49 @@ export default function App() {
     context, setContext,
     reset,
   } = useAppStore();
+
+  // Sync from Supabase when user logs in
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const remote = await loadProfile(user.id);
+      if (remote) {
+        setProfile(remote.profile);
+        setContext(remote.context);
+      }
+      const remoteSaved = await loadSaved(user.id);
+      if (remoteSaved.length) remoteSaved.forEach(addSaved);
+      const remoteHistory = await loadHistory(user.id);
+      if (remoteHistory.length) setSwipeHistory(remoteHistory);
+      setToast("Данные загружены из облака ☁️");
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Sync to Supabase when state changes (debounced via useEffect)
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncProfile(user.id, profile, context).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [user, profile, context]);
+
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncSaved(user.id, saved).catch(console.error);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [user, saved]);
+
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncHistory(user.id, swipeHistory).catch(console.error);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [user, swipeHistory]);
 
   useEffect(() => {
     if (phase === "main" && notifs.evening) {
@@ -69,7 +118,11 @@ export default function App() {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
-          {phase === "onboard" && <Onboarding onDone={(ctx) => { setContext(ctx); setPhase("main"); }} />}
+          {phase === "onboard" && <Onboarding onDone={(ctx) => { setContext(ctx); setPhase("auth"); }} />}
+          {phase === "auth" && <AuthScreen onSkip={() => setPhase("main")} />}
+
+          {/* Auto-advance to main after auth */}
+          {phase === "auth" && user && (() => { setPhase("main"); return null; })()}
 
           {phase === "main" && !matched && !openSaved && (
             <>
