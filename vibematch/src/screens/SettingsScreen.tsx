@@ -10,7 +10,7 @@ interface Props {
   weather: Weather;
   onWeather: (w: Weather) => void;
   notifs: Notifs;
-  onNotifs: (fn: (n: Notifs) => Notifs) => void;
+  onNotifs: (n: Notifs) => void;
   onBack: () => void;
   onReset: () => void;
   geoState: GeoState;
@@ -81,9 +81,9 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
 
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Уведомления</div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "4px 18px", marginBottom: 20 }}>
-          <Row label="Вечерние подсказки"><Toggle on={notifs.evening} onToggle={() => onNotifs((n) => ({ ...n, evening: !n.evening }))} /></Row>
-          <Row label="Скидки рядом"><Toggle on={notifs.sales} onToggle={() => onNotifs((n) => ({ ...n, sales: !n.sales }))} /></Row>
-          <Row label="Новые места" border={false}><Toggle on={notifs.places} onToggle={() => onNotifs((n) => ({ ...n, places: !n.places }))} /></Row>
+          <Row label="Вечерние подсказки"><Toggle on={notifs.evening} onToggle={() => onNotifs({ ...notifs, evening: !notifs.evening })} /></Row>
+          <Row label="Скидки рядом"><Toggle on={notifs.sales} onToggle={() => onNotifs({ ...notifs, sales: !notifs.sales })} /></Row>
+          <Row label="Новые места" border={false}><Toggle on={notifs.places} onToggle={() => onNotifs({ ...notifs, places: !notifs.places })} /></Row>
         </div>
 
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Сброс</div>

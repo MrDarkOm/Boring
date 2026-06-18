@@ -32,11 +32,26 @@ export function fmtDist(m: number): string {
 
 // ─── AI tip via local proxy (server/proxy.mjs) ───────────────────────────────
 // The proxy injects the API key; the browser never sees it.
+// Rate limit: max 5 calls per session (stored in sessionStorage).
+const AI_RATE_KEY = "vm_ai_calls";
+const AI_RATE_LIMIT = 5;
+
+function aiRateLimitExceeded(): boolean {
+  const calls = parseInt(sessionStorage.getItem(AI_RATE_KEY) ?? "0", 10);
+  return calls >= AI_RATE_LIMIT;
+}
+
+function incrementAiCalls() {
+  const calls = parseInt(sessionStorage.getItem(AI_RATE_KEY) ?? "0", 10);
+  sessionStorage.setItem(AI_RATE_KEY, String(calls + 1));
+}
+
 export async function fetchAiTip(
   history: SwipeRecord[],
   context: UserContext,
   weatherLabel: string
 ): Promise<string | null> {
+  if (aiRateLimitExceeded()) return null;
   const liked = history.filter((h) => h.dir === "right").map((h) => h.card.title);
   const disliked = history.filter((h) => h.dir === "left").map((h) => h.card.title);
   try {
@@ -46,6 +61,7 @@ export async function fetchAiTip(
       body: JSON.stringify({ liked, disliked, context, weather: weatherLabel }),
     });
     const data = await res.json();
+    if (data?.tip) incrementAiCalls();
     return data?.tip || null;
   } catch {
     return null;

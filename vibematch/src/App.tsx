@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
-import type { Card, Notifs, Profile, SwipeRecord, UserContext } from "./types";
+import type { Card } from "./types";
 import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
+import { useAuth } from "./hooks/useAuth";
+import { useCards } from "./hooks/useCards";
+import { useAppStore } from "./store";
+import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory } from "./api/sync";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
+import { AuthScreen } from "./screens/AuthScreen";
 import { SwipeScreen } from "./screens/SwipeScreen";
 import { MatchScreen } from "./screens/MatchScreen";
 import { SavedScreen } from "./screens/SavedScreen";
@@ -15,24 +20,80 @@ import { SurpriseModal } from "./screens/SurpriseModal";
 import { NavBar } from "./components/NavBar";
 import { Toast } from "./components/Toast";
 
+type Phase = "splash" | "onboard" | "auth" | "main";
+
 export default function App() {
-  const [phase, setPhase] = useState<"splash" | "onboard" | "main">("splash");
+  const [phase, setPhase] = useState<Phase>("splash");
   const [tab, setTab] = useState("swipe");
-  const [context, setCtx] = useState<UserContext>({ mood: null, people: null, time: null, genres: [] });
   const [matched, setMatch] = useState<Card | null>(null);
-  const [saved, setSaved] = useState<Card[]>([]);
-  const [swipeHistory, setHist] = useState<SwipeRecord[]>([]);
   const [openSaved, setOpenSaved] = useState<Card | null>(null);
-  const [comments, setComments] = useState<Record<number, string>>({});
-  const [notifs, setNotifs] = useState<Notifs>({ evening: true, sales: true, places: false });
-  const [profile, setProfile] = useState<Profile>({ name: "Пользователь", avatar: "🧑" });
   const [toast, setToast] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
+  const { user } = useAuth();
+  const { cards: allCards } = useCards(geo);
 
-  const addSaved = (c: Card) => setSaved((s) => (s.find((x) => x.id === c.id) ? s : [...s, c]));
-  const addComment = (id: number, txt: string) => setComments((c) => ({ ...c, [id]: txt }));
+  const {
+    profile, setProfile,
+    notifs, setNotifs,
+    saved, addSaved,
+    swipeHistory, setSwipeHistory,
+    comments, addComment,
+    context, setContext,
+    reset,
+    recordDailyActivity,
+    unlockAchievement,
+    streak,
+  } = useAppStore();
+
+  // Record daily activity and check streak achievements on main load
+  useEffect(() => {
+    if (phase === "main") recordDailyActivity();
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync from Supabase when user logs in
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const remote = await loadProfile(user.id);
+      if (remote) {
+        setProfile(remote.profile);
+        setContext(remote.context);
+      }
+      const remoteSaved = await loadSaved(user.id);
+      if (remoteSaved.length) remoteSaved.forEach(addSaved);
+      const remoteHistory = await loadHistory(user.id);
+      if (remoteHistory.length) setSwipeHistory(remoteHistory);
+      setToast("Данные загружены из облака ☁️");
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Sync to Supabase when state changes (debounced via useEffect)
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncProfile(user.id, profile, context).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [user, profile, context]);
+
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncSaved(user.id, saved).catch(console.error);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [user, saved]);
+
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      syncHistory(user.id, swipeHistory).catch(console.error);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [user, swipeHistory]);
 
   useEffect(() => {
     if (phase === "main" && notifs.evening) {
@@ -42,20 +103,39 @@ export default function App() {
   }, [phase, notifs.evening]);
 
   const handleReset = () => {
-    setSaved([]);
-    setHist([]);
-    setComments({});
+    reset();
     setToast("История и сохранения сброшены");
   };
 
+  const handleSwipeHistory = (h: typeof swipeHistory) => {
+    setSwipeHistory(h);
+    const total = h.length;
+    const liked = h.filter((s) => s.dir === "right").length;
+    if (total >= 1) unlockAchievement("first_swipe");
+    if (total >= 10) unlockAchievement("swipe_10");
+    if (total >= 50) unlockAchievement("swipe_50");
+    if (liked >= 5) unlockAchievement("like_5");
+    // Check all categories liked
+    const cats = new Set(h.filter((s) => s.dir === "right").map((s) => s.card.cat));
+    if (cats.size >= 5) unlockAchievement("all_cats");
+  };
+
+  const handleAddSaved = (c: Parameters<typeof addSaved>[0]) => {
+    addSaved(c);
+    const newCount = saved.filter((s) => s.id !== c.id).length + 1;
+    if (newCount >= 3) unlockAchievement("save_3");
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0" }}>
+    <div className="app-shell" style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
-          width: 390,
-          minHeight: 844,
+          width: "min(390px, 100vw)",
+          minHeight: "min(844px, 100dvh)",
+          maxHeight: "100dvh",
           background: "#0D0D0D",
-          borderRadius: 46,
+          // Rounded corners only on desktop (native app uses safe-area instead)
+          borderRadius: "clamp(0px, calc((100vw - 391px) * 999), 46px)",
           overflow: "hidden",
           position: "relative",
           fontFamily: F,
@@ -65,11 +145,15 @@ export default function App() {
         }}
       >
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
-        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} />}
+        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} allCards={allCards} />}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
-          {phase === "onboard" && <Onboarding onDone={(ctx) => { setCtx(ctx); setPhase("main"); }} />}
+          {phase === "onboard" && <Onboarding onDone={(ctx) => { setContext(ctx); setPhase("auth"); }} />}
+          {phase === "auth" && <AuthScreen onSkip={() => setPhase("main")} />}
+
+          {/* Auto-advance to main after auth */}
+          {phase === "auth" && user && (() => { setPhase("main"); return null; })()}
 
           {phase === "main" && !matched && !openSaved && (
             <>
@@ -78,11 +162,12 @@ export default function App() {
                   context={context}
                   weather={weather}
                   geo={geo}
+                  allCards={allCards}
                   onMatch={(c) => setMatch(c)}
-                  onSaved={addSaved}
+                  onSaved={handleAddSaved}
                   savedCount={saved.length}
                   swipeHistory={swipeHistory}
-                  onSwipeHistory={setHist}
+                  onSwipeHistory={handleSwipeHistory}
                   setTab={setTab}
                   onSurprise={() => setSurprise(true)}
                 />
@@ -95,11 +180,11 @@ export default function App() {
             </>
           )}
 
-          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={addSaved} />}
-          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={addSaved} />}
+          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={handleAddSaved} />}
+          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={handleAddSaved} />}
         </div>
 
-        {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} />}
+        {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} streak={streak} />}
       </div>
     </div>
   );
