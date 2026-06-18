@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "coverage": "vitest run --coverage"
+    "build:native": "node scripts/build-native.mjs",
+    "build:ios": "node scripts/build-native.mjs ios",
+    "build:android": "node scripts/build-native.mjs android"
   },
   "dependencies": {
     "@capacitor/cli": "^8.4.0",

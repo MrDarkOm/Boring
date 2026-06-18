@@ -42,7 +42,15 @@ export default function App() {
     comments, addComment,
     context, setContext,
     reset,
+    recordDailyActivity,
+    unlockAchievement,
+    streak,
   } = useAppStore();
+
+  // Record daily activity and check streak achievements on main load
+  useEffect(() => {
+    if (phase === "main") recordDailyActivity();
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync from Supabase when user logs in
   useEffect(() => {
@@ -99,6 +107,25 @@ export default function App() {
     setToast("История и сохранения сброшены");
   };
 
+  const handleSwipeHistory = (h: typeof swipeHistory) => {
+    setSwipeHistory(h);
+    const total = h.length;
+    const liked = h.filter((s) => s.dir === "right").length;
+    if (total >= 1) unlockAchievement("first_swipe");
+    if (total >= 10) unlockAchievement("swipe_10");
+    if (total >= 50) unlockAchievement("swipe_50");
+    if (liked >= 5) unlockAchievement("like_5");
+    // Check all categories liked
+    const cats = new Set(h.filter((s) => s.dir === "right").map((s) => s.card.cat));
+    if (cats.size >= 5) unlockAchievement("all_cats");
+  };
+
+  const handleAddSaved = (c: Parameters<typeof addSaved>[0]) => {
+    addSaved(c);
+    const newCount = saved.filter((s) => s.id !== c.id).length + 1;
+    if (newCount >= 3) unlockAchievement("save_3");
+  };
+
   return (
     <div className="app-shell" style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
@@ -137,10 +164,10 @@ export default function App() {
                   geo={geo}
                   allCards={allCards}
                   onMatch={(c) => setMatch(c)}
-                  onSaved={addSaved}
+                  onSaved={handleAddSaved}
                   savedCount={saved.length}
                   swipeHistory={swipeHistory}
-                  onSwipeHistory={setSwipeHistory}
+                  onSwipeHistory={handleSwipeHistory}
                   setTab={setTab}
                   onSurprise={() => setSurprise(true)}
                 />
@@ -153,11 +180,11 @@ export default function App() {
             </>
           )}
 
-          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={addSaved} />}
-          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={addSaved} />}
+          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={handleAddSaved} />}
+          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={handleAddSaved} />}
         </div>
 
-        {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} />}
+        {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} streak={streak} />}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Card, SwipeRecord } from "../types";
 import { F } from "../lib";
+import { useAppStore, ALL_ACHIEVEMENTS } from "../store";
 
 function Stat({ label, value, color = "#A78BFA" }: { label: string; value: number; color?: string }) {
   return (
@@ -11,15 +12,13 @@ function Stat({ label, value, color = "#A78BFA" }: { label: string; value: numbe
 }
 
 const CAT_COLORS: Record<string, string> = {
-  Фильм: "#7C3AED",
-  Место: "#059669",
-  Скидка: "#E11D48",
-  Книга: "#D97706",
-  Игра: "#0EA5E9",
-  "Актив.": "#F59E0B",
+  Фильм: "#7C3AED", Место: "#059669", Скидка: "#E11D48",
+  Книга: "#D97706", Игра: "#0EA5E9", "Актив.": "#F59E0B",
 };
 
 export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]; saved: Card[]; onBack: () => void }) {
+  const { streak, totalDays, achievements } = useAppStore();
+
   const total = history.length;
   const liked = history.filter((h) => h.dir === "right").length;
   const nope = history.filter((h) => h.dir === "left").length;
@@ -31,13 +30,25 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
   const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
   const maxCat = catEntries[0]?.[1] || 1;
 
+  const unlockedIds = new Set(achievements.filter((a) => a.unlockedAt).map((a) => a.id));
+
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
       <div style={{ padding: "50px 20px 14px", display: "flex", alignItems: "center", gap: 12 }}>
-        <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
+        <button aria-label="Назад" className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
         <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Статистика</div>
       </div>
+
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Streak banner */}
+        <div style={{ background: "linear-gradient(135deg,rgba(245,158,11,.15),rgba(239,68,68,.1))", border: "1px solid rgba(245,158,11,.25)", borderRadius: 18, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 36 }}>{streak >= 7 ? "⚡" : streak >= 3 ? "🔥" : "✨"}</div>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#FCD34D", fontFamily: F }}>{streak} {streak === 1 ? "день" : streak < 5 ? "дня" : "дней"} подряд</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", marginTop: 2 }}>Всего активных дней: {totalDays}</div>
+          </div>
+        </div>
+
         {total === 0 ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.45 }}>
             <div style={{ fontSize: 44 }}>📊</div>
@@ -54,6 +65,7 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
               <Stat label="Пропущено" value={nope} color="#EF4444" />
               <Stat label="Сохранено" value={saved.length} color="#FCD34D" />
             </div>
+
             <div style={{ background: "rgba(124,58,237,.09)", border: "1px solid rgba(124,58,237,.18)", borderRadius: 18, padding: "18px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,.65)", fontFamily: F }}>Рейтинг лайков</span>
@@ -63,6 +75,7 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
                 <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg,#7C3AED,#A78BFA)", width: `${Math.round((liked / total) * 100)}%`, transition: "width 1s ease" }} />
               </div>
             </div>
+
             {catEntries.length > 0 && (
               <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 18, padding: "18px 16px" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", marginBottom: 14, fontFamily: F }}>По категориям</div>
@@ -79,23 +92,28 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
                 ))}
               </div>
             )}
-            {liked > 0 && (
-              <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 18, padding: "18px 16px" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", marginBottom: 12, fontFamily: F }}>Последние лайки</div>
-                {history
-                  .filter((h) => h.dir === "right")
-                  .slice(-4)
-                  .reverse()
-                  .map((h) => (
-                    <div key={h.card.id} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,.05)" }}>
-                      <span style={{ fontSize: 18 }}>{h.card.emoji}</span>
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,.7)", fontFamily: F }}>{h.card.title}</span>
-                    </div>
-                  ))}
-              </div>
-            )}
           </>
         )}
+
+        {/* Achievements */}
+        <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 18, padding: "18px 16px" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.6)", marginBottom: 14, fontFamily: F }}>Достижения</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {ALL_ACHIEVEMENTS.map((ach) => {
+              const unlocked = unlockedIds.has(ach.id);
+              return (
+                <div key={ach.id} style={{ display: "flex", alignItems: "center", gap: 12, opacity: unlocked ? 1 : 0.35 }}>
+                  <div style={{ fontSize: 24, width: 36, textAlign: "center", filter: unlocked ? "none" : "grayscale(1)" }}>{ach.emoji}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: unlocked ? "#fff" : "rgba(255,255,255,.5)", fontFamily: F }}>{ach.title}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>{ach.desc}</div>
+                  </div>
+                  {unlocked && <div style={{ marginLeft: "auto", fontSize: 10, color: "#22C55E", fontWeight: 700 }}>✓</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
