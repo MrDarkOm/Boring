@@ -145,7 +145,7 @@ export default function App() {
         }}
       >
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
-        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} />}
+        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} allCards={allCards} />}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
