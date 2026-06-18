@@ -3,6 +3,7 @@ import type { Card } from "./types";
 import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
 import { useAuth } from "./hooks/useAuth";
+import { useCards } from "./hooks/useCards";
 import { useAppStore } from "./store";
 import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory } from "./api/sync";
 import { Splash } from "./screens/Splash";
@@ -31,6 +32,7 @@ export default function App() {
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
   const { user } = useAuth();
+  const { cards: allCards } = useCards(geo);
 
   const {
     profile, setProfile,
@@ -131,6 +133,7 @@ export default function App() {
                   context={context}
                   weather={weather}
                   geo={geo}
+                  allCards={allCards}
                   onMatch={(c) => setMatch(c)}
                   onSaved={addSaved}
                   savedCount={saved.length}

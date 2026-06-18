@@ -8,6 +8,7 @@ interface Props {
   context: UserContext;
   weather: Weather;
   geo: Geo | null;
+  allCards?: Card[];
   onMatch: (c: Card) => void;
   onSaved: (c: Card) => void;
   savedCount: number;
@@ -20,7 +21,8 @@ interface Props {
 export function SwipeScreen({
   context,
   weather,
-  geo,
+  geo: _geo,
+  allCards = ALL_CARDS,
   onMatch,
   onSaved,
   savedCount,
@@ -39,7 +41,7 @@ export function SwipeScreen({
   const startRef = useRef<{ x: number; y: number } | null>(null);
 
   // Score-based filtering: prefer matching cards, fallback to all cards if < 4 remain
-  const scored = ALL_CARDS.map((c) => {
+  const scored = allCards.map((c) => {
     let score = 0;
     if (c.weather.includes("any") || c.weather.includes(weather.id)) score += 2;
     if (context.genres?.length && c.genres.some((g) => context.genres.includes(g))) score += 3;
@@ -48,7 +50,7 @@ export function SwipeScreen({
     .sort((a, b) => b.score - a.score);
 
   const filtered = scored.filter((x) => x.score > 0).map((x) => x.c);
-  const cards = filtered.length >= 4 ? filtered : ALL_CARDS;
+  const cards = filtered.length >= 4 ? filtered : allCards;
 
   const card = deckDone ? null : cards[idx];
   const nextC = cards[(idx + 1) % cards.length];
@@ -155,7 +157,7 @@ export function SwipeScreen({
           <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", fontFamily: F }}>Для тебя</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 2 }}>
             {moodLabel} · {context.people} · {context.time}
-            {geo?.city ? " · " + geo.city : ""}
+            {_geo?.city ? " · " + _geo.city : ""}
           </div>
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
