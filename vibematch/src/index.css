@@ -1,25 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Unbounded:wght@700;900&display=swap');
+
+:root {
+  --bg-0: #07070E;
+  --bg-1: #0C0C16;
+  --bg-2: #12121F;
+  --surface: rgba(255,255,255,.045);
+  --surface-2: rgba(255,255,255,.08);
+  --line: rgba(255,255,255,.08);
+  --line-2: rgba(255,255,255,.14);
+  --text-1: #F4F4FA;
+  --text-2: rgba(244,244,250,.62);
+  --text-3: rgba(244,244,250,.38);
+  --brand: #7C3AED;
+  --brand-2: #A78BFA;
+  --ok: #34D399;
+  --no: #FB7185;
+  --warn: #FBBF24;
+}
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0;
-  background: #080810;
-  /* iOS safe-area support */
+  background: var(--bg-0);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* Full-screen on mobile, centered phone frame on desktop */
 @media (max-width: 430px) {
-  .app-shell {
-    padding: 0 !important;
-    align-items: stretch !important;
-  }
-  .app-shell > div {
-    border-radius: 0 !important;
-    max-height: 100dvh !important;
-  }
+  .app-shell { padding: 0 !important; align-items: stretch !important; }
+  .app-shell > div { border-radius: 0 !important; max-height: 100dvh !important; }
 }
 
+/* ── Keyframes ─────────────────────────────────────────────── */
 @keyframes splashPulse { 0%,100%{transform:scale(.92);opacity:.6} 50%{transform:scale(1.08);opacity:1} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
@@ -30,18 +42,36 @@ body {
 @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 @keyframes notifSlide { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes ping { 0%{transform:scale(1);opacity:1} 75%,100%{transform:scale(2.2);opacity:0} }
+@keyframes floatOrb { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(24px,-30px) scale(1.12)} 66%{transform:translate(-18px,20px) scale(.94)} }
+@keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes gradShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
 
+/* ── Utility classes ───────────────────────────────────────── */
 .fade-up { animation: fadeUp .38s ease both; }
 .fade-in { animation: fadeIn .28s ease both; }
 .card-in { animation: cardIn .42s cubic-bezier(.34,1.4,.64,1) both; }
 .pop-in { animation: popIn .5s cubic-bezier(.34,1.6,.64,1) both; }
-.action-btn { transition: transform .15s, opacity .15s; }
+.sheet-up { animation: sheetUp .32s cubic-bezier(.32,1,.4,1) both; }
+.float-orb { animation: floatOrb 9s ease-in-out infinite; }
+
+.action-btn { transition: transform .15s, opacity .15s, background .2s, border-color .2s; }
 .action-btn:active { transform: scale(.87); opacity: .75; }
+.swipe-btn { transition: transform .15s, box-shadow .2s; }
 .swipe-btn:active { transform: scale(.85); }
 .tab-btn:active { transform: scale(.9); }
+.chip-btn { transition: all .18s; }
+.chip-btn:active { transform: scale(.92); }
 .ping { animation: ping 1.4s cubic-bezier(0,0,.2,1) infinite; }
 
+/* Primary CTA with animated gradient sheen */
+.cta-grad {
+  background-size: 200% 200% !important;
+  animation: gradShift 5s ease infinite;
+}
+
 ::-webkit-scrollbar { display: none; }
+input, button { font-family: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

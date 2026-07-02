@@ -69,7 +69,14 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: F }}>{sel.name}</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,.38)", marginTop: 3 }}>{sel.distLabel} · ⭐ {sel.rating} · {sel.open ? "Открыто" : "Закрыто"}</div>
             </div>
-            <button className="action-btn" style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>→</button>
+            <button
+              className="action-btn"
+              aria-label="Построить маршрут"
+              onClick={() => window.open(`https://yandex.ru/maps/?rtext=${userLat},${userLng}~${sel.lat},${sel.lng}&rtt=pd`, "_blank", "noopener,noreferrer")}
+              style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#08080E", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 700 }}
+            >
+              Маршрут →
+            </button>
           </div>
         </div>
       )}

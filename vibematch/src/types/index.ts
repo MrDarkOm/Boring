@@ -1,4 +1,4 @@
-export type Category = "film" | "place" | "sale" | "book" | "game";
+export type Category = "film" | "place" | "sale" | "book" | "game" | "food" | "activity";
 
 export interface Card {
   id: number;

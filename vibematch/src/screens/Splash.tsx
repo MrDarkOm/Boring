@@ -21,14 +21,21 @@ export function Splash({ onDone }: { onDone: () => void }) {
         alignItems: "center",
         justifyContent: "center",
         gap: 14,
-        background: "radial-gradient(ellipse at 50% 35%,#2D1B69 0%,#0D0D18 65%)",
+        background: "radial-gradient(ellipse at 50% 35%,#2D1B69 0%,#0C0C16 65%)",
         transition: "opacity .4s",
         opacity: out ? 0 : 1,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <div style={{ fontSize: 76, animation: "splashPulse 1.8s ease-in-out infinite" }}>✨</div>
-      <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: -1.5, fontFamily: F }}>вайбматч</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", letterSpacing: 3, textTransform: "uppercase" }}>
+      {/* Floating ambient orbs */}
+      <div className="float-orb" style={{ position: "absolute", top: "18%", left: "12%", width: 130, height: 130, borderRadius: "50%", background: "#7C3AED", filter: "blur(70px)", opacity: 0.35 }} />
+      <div className="float-orb" style={{ position: "absolute", bottom: "22%", right: "10%", width: 110, height: 110, borderRadius: "50%", background: "#34D399", filter: "blur(75px)", opacity: 0.18, animationDelay: "-4s" }} />
+      <div className="float-orb" style={{ position: "absolute", top: "60%", left: "20%", width: 90, height: 90, borderRadius: "50%", background: "#FB7185", filter: "blur(65px)", opacity: 0.14, animationDelay: "-7s" }} />
+
+      <div style={{ fontSize: 76, animation: "splashPulse 1.8s ease-in-out infinite", position: "relative" }}>✨</div>
+      <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: -1.5, fontFamily: F, position: "relative" }}>вайбматч</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", letterSpacing: 3.5, textTransform: "uppercase", position: "relative", fontFamily: F }}>
         найди чем заняться
       </div>
     </div>

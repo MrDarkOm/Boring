@@ -100,10 +100,12 @@ export const useAppStore = create<AppStore>()(
       removeSaved: (id) => set((s) => ({ saved: s.saved.filter((c) => c.id !== id) })),
       setSwipeHistory: (swipeHistory) => set({ swipeHistory }),
       addComment: (id, txt) => set((s) => ({ comments: { ...s.comments, [id]: txt } })),
-      addCollection: (name, emoji) =>
+      addCollection: (name, emoji) => {
         set((s) => ({
           collections: [...s.collections, { id: crypto.randomUUID(), name, emoji, cardIds: [], createdAt: new Date().toISOString() }],
-        })),
+        }));
+        get().unlockAchievement("collection_1");
+      },
       removeCollection: (id) => set((s) => ({ collections: s.collections.filter((c) => c.id !== id) })),
       addToCollection: (collectionId, cardId) =>
         set((s) => ({

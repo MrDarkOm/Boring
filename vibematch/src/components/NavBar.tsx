@@ -2,10 +2,10 @@ import { F } from "../lib";
 
 const ITEMS = [
   { id: "swipe",    icon: "✨", label: "Для тебя" },
-  { id: "map",      icon: "🗺",  label: "Карта" },
+  { id: "map",      icon: "🗺",  label: "Рядом" },
   { id: "coop",     icon: "👥", label: "Вместе" },
   { id: "stats",    icon: "📊", label: "Стата" },
-  { id: "saved",    icon: "🔖", label: "Saved" },
+  { id: "saved",    icon: "🔖", label: "Моё" },
   { id: "settings", icon: "⚙",  label: "Ещё" },
 ];
 
@@ -20,8 +20,10 @@ export function NavBar({ tab, setTab, streak = 0 }: Props) {
     <div
       style={{
         display: "flex",
-        background: "rgba(10,10,18,.97)",
-        borderTop: "1px solid rgba(255,255,255,.06)",
+        background: "rgba(9,9,17,.88)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        borderTop: "1px solid rgba(255,255,255,.07)",
         paddingBottom: 6,
         paddingTop: 2,
       }}

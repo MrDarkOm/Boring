@@ -4,7 +4,8 @@ import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
 import { useAuth } from "./hooks/useAuth";
 import { useCards } from "./hooks/useCards";
-import { useAppStore } from "./store";
+import { useAppStore, ALL_ACHIEVEMENTS } from "./store";
+import { ContextSheet } from "./components/ContextSheet";
 import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory } from "./api/sync";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
@@ -29,6 +30,7 @@ export default function App() {
   const [openSaved, setOpenSaved] = useState<Card | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
+  const [ctxSheet, setCtxSheet] = useState(false);
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
   const { user } = useAuth();
@@ -107,23 +109,32 @@ export default function App() {
     setToast("История и сохранения сброшены");
   };
 
+  // Unlock with a celebratory toast (only on first unlock)
+  const unlock = (id: string) => {
+    const already = useAppStore.getState().achievements.some((a) => a.id === id && a.unlockedAt);
+    if (already) return;
+    unlockAchievement(id);
+    const def = ALL_ACHIEVEMENTS.find((a) => a.id === id);
+    if (def) setToast(`${def.emoji} Достижение: ${def.title}!`);
+  };
+
   const handleSwipeHistory = (h: typeof swipeHistory) => {
     setSwipeHistory(h);
     const total = h.length;
     const liked = h.filter((s) => s.dir === "right").length;
-    if (total >= 1) unlockAchievement("first_swipe");
-    if (total >= 10) unlockAchievement("swipe_10");
-    if (total >= 50) unlockAchievement("swipe_50");
-    if (liked >= 5) unlockAchievement("like_5");
+    if (total >= 1) unlock("first_swipe");
+    if (total >= 10) unlock("swipe_10");
+    if (total >= 50) unlock("swipe_50");
+    if (liked >= 5) unlock("like_5");
     // Check all categories liked
     const cats = new Set(h.filter((s) => s.dir === "right").map((s) => s.card.cat));
-    if (cats.size >= 5) unlockAchievement("all_cats");
+    if (cats.size >= 5) unlock("all_cats");
   };
 
   const handleAddSaved = (c: Parameters<typeof addSaved>[0]) => {
     addSaved(c);
     const newCount = saved.filter((s) => s.id !== c.id).length + 1;
-    if (newCount >= 3) unlockAchievement("save_3");
+    if (newCount >= 3) unlock("save_3");
   };
 
   return (
@@ -146,6 +157,7 @@ export default function App() {
       >
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
         {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} allCards={allCards} />}
+        {ctxSheet && <ContextSheet context={context} onSave={setContext} onClose={() => setCtxSheet(false)} />}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
@@ -170,6 +182,7 @@ export default function App() {
                   onSwipeHistory={handleSwipeHistory}
                   setTab={setTab}
                   onSurprise={() => setSurprise(true)}
+                  onEditContext={() => setCtxSheet(true)}
                 />
               )}
               {tab === "map" && <MapScreen onBack={() => setTab("swipe")} geo={geo} />}

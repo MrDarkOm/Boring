@@ -12,8 +12,10 @@ function Stat({ label, value, color = "#A78BFA" }: { label: string; value: numbe
 }
 
 const CAT_COLORS: Record<string, string> = {
-  Фильм: "#7C3AED", Место: "#059669", Скидка: "#E11D48",
-  Книга: "#D97706", Игра: "#0EA5E9", "Актив.": "#F59E0B",
+  Кино: "#A78BFA", Место: "#34D399", Скидка: "#FB7185",
+  Книга: "#FBBF24", Игра: "#38BDF8", Еда: "#FB923C", Актив: "#2DD4BF",
+  // legacy labels from old swipe history
+  Фильм: "#A78BFA", "Актив.": "#2DD4BF",
 };
 
 export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]; saved: Card[]; onBack: () => void }) {

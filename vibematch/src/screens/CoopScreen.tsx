@@ -6,6 +6,7 @@ import { Glow, Tag } from "../components/ui";
 import { supabase } from "../api/supabase";
 import { createCoopSession, joinCoopSession, getCoopSession, coopSwipe, checkCoopMatch } from "../api/coop";
 import { useAuth } from "../hooks/useAuth";
+import { useAppStore } from "../store";
 
 type CoopPhase = "lobby" | "create" | "join" | "waiting" | "swipe" | "result";
 
@@ -74,6 +75,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     if (!isAuthed) { setError("Войдите в аккаунт для совместного режима"); return; }
     const newCode = await createCoopSession(user.id);
     if (!newCode) { setError("Не удалось создать комнату"); return; }
+    useAppStore.getState().unlockAchievement("coop_first");
     setCode(newCode);
     setPhase("waiting");
   };
@@ -82,6 +84,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     if (!isAuthed) { setError("Войдите в аккаунт для совместного режима"); return; }
     const joinedId = await joinCoopSession(joinCode.trim().toUpperCase(), user.id);
     if (!joinedId) { setError("Комната не найдена или уже занята"); return; }
+    useAppStore.getState().unlockAchievement("coop_first");
     const session = await getCoopSession(joinCode.trim().toUpperCase());
     setSessionId(joinedId);
     setCode(session?.code ?? joinCode);
