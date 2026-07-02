@@ -66,6 +66,7 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "16px 18px", marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 4, fontFamily: F }}>Влияет на подборку карточек</div>
           {geoState === "ok" && <div style={{ fontSize: 11, color: "#22C55E", marginBottom: 12, fontFamily: F }}>✓ Определено по геолокации · {weather.temp}°C</div>}
+          {geoState === "approx" && <div style={{ fontSize: 11, color: "#38BDF8", marginBottom: 12, fontFamily: F }}>≈ Примерно по IP · {weather.temp}°C — разреши геолокацию для точности</div>}
           {geoState === "loading" && <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 12, fontFamily: F }}>Определяю местоположение...</div>}
           {(geoState === "denied" || geoState === "error") && <div style={{ fontSize: 11, color: "#F59E0B", marginBottom: 12, fontFamily: F }}>Геолокация недоступна — выберите вручную</div>}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

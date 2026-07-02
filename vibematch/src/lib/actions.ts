@@ -23,8 +23,22 @@ export function actionUrl(card: Card): string {
   }
 }
 
+// window.open is silently blocked in webviews (Telegram, Instagram) and by
+// popup blockers; fall back to a real anchor click, then to direct navigation.
+export function openUrl(url: string) {
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  if (w) return;
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export function openAction(card: Card) {
-  window.open(actionUrl(card), "_blank", "noopener,noreferrer");
+  openUrl(actionUrl(card));
 }
 
 // ─── Share via Web Share API with clipboard fallback ─────────────────────────

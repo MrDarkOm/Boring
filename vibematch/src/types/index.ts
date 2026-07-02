@@ -53,7 +53,7 @@ export interface Geo {
   city?: string;
 }
 
-export type GeoState = "idle" | "loading" | "ok" | "denied" | "error";
+export type GeoState = "idle" | "loading" | "ok" | "approx" | "denied" | "error";
 
 export interface UserContext {
   mood: string | null;
