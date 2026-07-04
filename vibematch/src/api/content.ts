@@ -1,4 +1,5 @@
 import type { Card, Geo } from "../types";
+import { getLocale } from "../i18n";
 
 // ─── Remote card shape (superset of Card) ────────────────────────────────────
 interface RemoteCard extends Card {
@@ -27,12 +28,13 @@ function toCache(key: string, cards: RemoteCard[]) {
 
 // ─── TMDB trending / search ───────────────────────────────────────────────────
 export async function fetchTmdbCards(action: "trending" | "search", query?: string): Promise<RemoteCard[]> {
-  const key = `tmdb:${action}:${query ?? ""}`;
+  const lang = getLocale();
+  const key = `tmdb:${action}:${query ?? ""}:${lang}`;
   const cached = fromCache(key);
   if (cached) return cached;
 
   try {
-    const params = new URLSearchParams({ action });
+    const params = new URLSearchParams({ action, lang });
     if (query) params.set("q", query);
     const url = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/tmdb?${params}`;
     const res = await fetch(url, {

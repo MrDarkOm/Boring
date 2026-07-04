@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Card, Notifs, Profile, SwipeRecord, UserContext } from "../types";
+import { migrateToV2 } from "./migrations";
 
 // ─── Session slice ────────────────────────────────────────────────────────────
 interface SessionSlice {
@@ -165,7 +166,10 @@ export const useAppStore = create<AppStore>()(
       },
     }),
     {
-      name: "vibematch-v1",
+      name: "vibematch-v1", // storage key stays; the version field drives migration
+      version: 2,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (state: any, from: number) => (from < 2 ? migrateToV2(state) : state),
       partialize: (s) => ({
         profile: s.profile,
         notifs: s.notifs,

@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { Card, Geo } from "../types";
-import { ALL_CARDS } from "../data";
+import { getStaticCards } from "../data";
+import { useLocale } from "../i18n";
 import { fetchNearby } from "../lib/places";
 import { fetchTmdbCards, mergeCards } from "../api/content";
 
-// Deck = static catalog + REAL nearby places (Overpass, client-side, no backend)
-// + TMDB trending when a Supabase backend is configured.
+// Deck = static geo-independent catalog + REAL nearby places (Overpass,
+// client-side, no backend) + TMDB trending when a Supabase backend is configured.
 export function useCards(geo: Geo | null): { cards: Card[]; loading: boolean } {
-  const [cards, setCards] = useState<Card[]>(ALL_CARDS);
+  const locale = useLocale();
+  const staticCards = useMemo(() => getStaticCards(locale), [locale]);
+  const [remote, setRemote] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,14 +29,14 @@ export function useCards(geo: Geo | null): { cards: Card[]; loading: boolean } {
     Promise.all(fetches)
       .then((results) => {
         if (cancelled) return;
-        let merged = ALL_CARDS;
-        for (const extra of results) merged = mergeCards(merged, extra);
-        setCards(merged);
+        setRemote(results.flat());
       })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [geo?.lat, geo?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [geo?.lat, geo?.lng, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cards = useMemo(() => mergeCards(staticCards, remote), [staticCards, remote]);
 
   return { cards, loading };
 }

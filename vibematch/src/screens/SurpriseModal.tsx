@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Card } from "../types";
-import { ALL_CARDS } from "../data";
+import { getStaticCards } from "../data";
 import { F } from "../lib";
 import { rankCards } from "../lib/scoring";
 import { useAppStore } from "../store";
@@ -26,7 +26,7 @@ export function SurpriseModal({
 
   const { context, swipeHistory, saved } = useAppStore();
 
-  const cards = allCards ?? ALL_CARDS;
+  const cards = allCards?.length ? allCards : getStaticCards();
 
   useEffect(() => {
     // Animate through loading steps, then resolve

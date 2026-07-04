@@ -1,14 +1,14 @@
 import type { Card, SwipeRecord, UserContext, Weather } from "../types";
 
-// Hour-of-day → preferred categories
+// Hour-of-day → preferred genre slugs
 const TIME_GENRES: Record<string, string[]> = {
-  morning:   ["кофе", "завтраки", "спорт", "прогулки"],
-  afternoon: ["места", "активный отдых", "кофе"],
-  evening:   ["бары", "кино", "еда", "музыка", "театр"],
-  night:     ["бары", "музыка", "игры", "кино"],
+  morning:   ["coffee", "breakfast", "sport", "walks"],
+  afternoon: ["places", "outdoor", "coffee"],
+  evening:   ["bars", "cinema", "food", "music", "theatre"],
+  night:     ["bars", "music", "games", "cinema"],
 };
 
-const OUTDOOR = ["прогулки", "активный отдых"];
+const OUTDOOR = ["walks", "outdoor"];
 
 function timeOfDay(): keyof typeof TIME_GENRES {
   const h = new Date().getHours();
@@ -38,7 +38,7 @@ export function scoreCard(
   history: SwipeRecord[]
 ): number {
   let score = 0;
-  const isHome = card.cat === "film" || card.cat === "book" || card.cat === "game" || card.genres.includes("готовка");
+  const isHome = card.cat === "film" || card.cat === "book" || card.cat === "game" || card.genres.includes("cooking");
   const isOut = card.cat === "place" || card.cat === "activity" || card.genres.some((g) => OUTDOOR.includes(g));
 
   // ── Weather: match is a bonus, going outside in bad weather is a penalty ──
@@ -66,31 +66,31 @@ export function scoreCard(
       if (isOut) score -= 4;
       break;
     case "active":
-      if (card.cat === "activity" || card.genres.some((g) => ["спорт", "активный отдых", "прогулки"].includes(g))) score += 4;
+      if (card.cat === "activity" || card.genres.some((g) => ["sport", "outdoor", "walks"].includes(g))) score += 4;
       if (isHome) score -= 3;
       break;
     case "social":
-      if (card.genres.some((g) => ["бары", "квесты", "музыка", "еда"].includes(g)) || card.cat === "sale") score += 3;
+      if (card.genres.some((g) => ["bars", "quests", "music", "food"].includes(g)) || card.cat === "sale") score += 3;
       if (card.cat === "book") score -= 3;
       break;
     case "calm":
-      if (card.genres.some((g) => ["кофе", "уют", "литература", "прогулки"].includes(g))) score += 3;
-      if (card.genres.some((g) => ["бары", "экшн", "квесты"].includes(g))) score -= 2;
+      if (card.genres.some((g) => ["coffee", "cozy", "literature", "walks"].includes(g))) score += 3;
+      if (card.genres.some((g) => ["bars", "action", "quests"].includes(g))) score -= 2;
       break;
   }
 
   // ── People ──
-  if (context.people === "Компания" && card.genres.some((g) => ["квесты", "бары", "активный отдых", "еда"].includes(g))) score += 2;
-  if (context.people === "Компания" && card.cat === "book") score -= 2;
-  if (context.people === "Вдвоём" && card.genres.includes("романтика")) score += 2;
+  if (context.people === "group" && card.genres.some((g) => ["quests", "bars", "outdoor", "food"].includes(g))) score += 2;
+  if (context.people === "group" && card.cat === "book") score -= 2;
+  if (context.people === "duo" && card.genres.includes("romance")) score += 2;
 
-  // ── Time budget: 30 минут — не время для трёхчасового кино ──
-  if (context.time === "30 мин") {
+  // ── Time budget: 30 minutes is no time for a three-hour film ──
+  if (context.time === "30m") {
     if (card.cat === "film") score -= 3;
     if (card.cat === "activity" || card.cat === "place") score -= 1.5;
-    if (card.cat === "game" || card.genres.includes("кофе") || card.genres.includes("еда")) score += 1.5;
+    if (card.cat === "game" || card.genres.includes("coffee") || card.genres.includes("food")) score += 1.5;
   }
-  if (context.time === "Весь день" && (card.cat === "activity" || card.cat === "place")) score += 1.5;
+  if (context.time === "allday" && (card.cat === "activity" || card.cat === "place")) score += 1.5;
 
   // ── Learned from swipe history (likes up, dislikes down) ──
   const learned = buildLearned(history);
@@ -99,7 +99,7 @@ export function scoreCard(
   }
 
   // ── Real nearby places get a locality boost ──
-  if (card.lat && card.lng && card.tag.includes("от тебя")) score += 1.5;
+  if (card.source === "osm" && card.lat && card.lng) score += 1.5;
 
   return score;
 }

@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import type { Card, Category, Geo, SwipeDir, SwipeRecord, UserContext, Weather } from "../types";
-import { ALL_CARDS, MOODS, CAT_META } from "../data";
+import { MOODS, CAT_META } from "../data";
 import { F, fetchAiTip } from "../lib";
 import { rankCards, scoreCard } from "../lib/scoring";
 import { openAction } from "../lib/actions";
+import { t, type TKey } from "../i18n";
 import { Glow, Tag } from "../components/ui";
 
 interface Props {
@@ -27,7 +28,7 @@ export function SwipeScreen({
   context,
   weather,
   geo: _geo,
-  allCards = ALL_CARDS,
+  allCards = [],
   onMatch,
   onSaved,
   savedCount,
@@ -92,7 +93,7 @@ export function SwipeScreen({
   const swipe = (dir: SwipeDir) => {
     if (!card || exit) return;
     setExit(dir);
-    const nh = [...swipeHistory, { dir, card }];
+    const nh = [...swipeHistory, { id: crypto.randomUUID(), at: new Date().toISOString(), dir, card }];
     onSwipeHistory(nh);
     if (dir === "right") onMatch(card);
     if (dir === "up") onSaved(card);
@@ -183,7 +184,11 @@ export function SwipeScreen({
             aria-label="Изменить настроение и интересы"
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontFamily: F, display: "flex", alignItems: "center", gap: 4 }}
           >
-            {[moodLabel, context.people, context.time].filter(Boolean).join(" · ") || "Настроить подборку"}
+            {[
+              moodLabel,
+              context.people && t(`people.${context.people}` as TKey),
+              context.time && t(`time.${context.time}` as TKey),
+            ].filter(Boolean).join(" · ") || "Настроить подборку"}
             {_geo?.city ? ` · ${_geo.city}` : ""}
             <span style={{ color: "#A78BFA", fontSize: 10 }}>✎</span>
           </button>
@@ -363,7 +368,7 @@ export function SwipeScreen({
                 <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 9 }}>
                   <Tag>{card.tag}</Tag>
                   {card.genres.slice(0, 2).map((g) => (
-                    <Tag key={g}>{g}</Tag>
+                    <Tag key={g}>{t(`genre.${g}` as TKey)}</Tag>
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 15 }}>✦ {card.hint}</div>

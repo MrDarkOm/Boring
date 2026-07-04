@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Card } from "../types";
-import { ALL_CARDS } from "../data";
+import { getStaticCards } from "../data";
+import { useLocale } from "../i18n";
 import { F } from "../lib";
 import { Glow, Tag } from "../components/ui";
 import { supabase } from "../api/supabase";
@@ -21,7 +22,10 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
   const [result, setResult] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const card = ALL_CARDS[idx % ALL_CARDS.length];
+  const locale = useLocale();
+  // Both participants share the same deterministic deck (matching is by card id)
+  const deck = useMemo(() => getStaticCards(locale), [locale]);
+  const card = deck[idx % deck.length];
   const isAuthed = !!user;
 
   // Realtime: listen for guest joining (host side)
@@ -60,7 +64,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
       }, async () => {
         const matched = await checkCoopMatch(sid, cardId);
         if (matched) {
-          const matchedCard = ALL_CARDS.find((c) => c.id === cardId) ?? ALL_CARDS[0];
+          const matchedCard = deck.find((c) => c.id === cardId) ?? deck[0];
           setResult(matchedCard);
           setPhase("result");
           supabase!.removeChannel(channel);
@@ -69,7 +73,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
       .subscribe();
 
     return () => { supabase!.removeChannel(channel); };
-  }, []);
+  }, [deck]);
 
   const handleCreate = async () => {
     if (!isAuthed) { setError("Войдите в аккаунт для совместного режима"); return; }
@@ -108,8 +112,8 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     }
 
     const next = idx + 1;
-    if (next >= ALL_CARDS.length) {
-      setResult(ALL_CARDS[0]);
+    if (next >= deck.length) {
+      setResult(deck[0]);
       setPhase("result");
     } else {
       setIdx(next);
@@ -157,7 +161,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
         <div style={{ padding: "50px 20px 10px", display: "flex", justifyContent: "space-between" }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>Ваш вайб</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{code && `#${code} · `}{idx + 1}/{ALL_CARDS.length}</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{code && `#${code} · `}{idx + 1}/{deck.length}</div>
         </div>
         <div style={{ flex: 1, position: "relative", margin: "0 16px 10px" }}>
           <div className="card-in" style={{ position: "relative", borderRadius: 26, padding: 22, minHeight: 360, background: `linear-gradient(150deg,${card.bg} 0%,#0D0D12 100%)`, border: "1px solid rgba(255,255,255,.07)", display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden" }}>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import type { Geo, Place } from "../types";
-import { PLACES } from "../data";
 import { F } from "../lib";
 import { fetchNearby } from "../lib/places";
 import { openUrl } from "../lib/actions";
@@ -21,11 +20,11 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
       .finally(() => setLoading(false));
   }, [geo?.lat, geo?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const userLat = geo?.lat || 55.751;
-  const userLng = geo?.lng || 37.618;
+  const userLat = geo?.lat ?? 0;
+  const userLng = geo?.lng ?? 0;
 
-  // Real data when we have it; demo list only as a last resort
-  const list: Place[] = places?.length ? places : PLACES;
+  // Real data only — no demo fallback
+  const list: Place[] = places ?? [];
   const isDemo = !places?.length;
 
   // Fit map bounds around actual points
@@ -58,7 +57,7 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
       {isDemo && !loading && (
         <div className="fade-in" style={{ margin: "0 16px 10px", background: "rgba(251,191,36,.08)", border: "1px solid rgba(251,191,36,.2)", borderRadius: 12, padding: "9px 14px", fontSize: 12, color: "#FCD34D", fontFamily: F, lineHeight: 1.5 }}>
           {failed
-            ? "⚠️ Не удалось загрузить места поблизости — показываем примеры. Проверь интернет и потяни вниз."
+            ? "⚠️ Не удалось загрузить места поблизости. Проверь интернет и попробуй ещё раз."
             : geo
               ? "⏳ Ищем настоящие места рядом..."
               : "⚠️ Разреши геолокацию (или зайди по HTTPS), чтобы видеть реальные места рядом."}

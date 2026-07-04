@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { UserContext } from "../types";
 import { MOODS, PEOPLE, TIMES, ALL_GENRES } from "../data";
+import { t, type TKey } from "../i18n";
 import { F } from "../lib";
 
 interface Props {
@@ -74,14 +75,14 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>Сколько вас</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
           {PEOPLE.map((p) => (
-            <Chip key={p} label={p} selected={vals.people === p} onClick={() => setVals((v) => ({ ...v, people: p }))} />
+            <Chip key={p} label={t(`people.${p}` as TKey)} selected={vals.people === p} onClick={() => setVals((v) => ({ ...v, people: p }))} />
           ))}
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>Сколько времени</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-          {TIMES.map((t) => (
-            <Chip key={t} label={t} selected={vals.time === t} onClick={() => setVals((v) => ({ ...v, time: t }))} />
+          {TIMES.map((tm) => (
+            <Chip key={tm} label={t(`time.${tm}` as TKey)} selected={vals.time === tm} onClick={() => setVals((v) => ({ ...v, time: tm }))} />
           ))}
         </div>
 
@@ -94,7 +95,7 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
             return (
               <Chip
                 key={g}
-                label={g}
+                label={t(`genre.${g}` as TKey)}
                 selected={sel}
                 onClick={() => setVals((v) => ({ ...v, genres: sel ? v.genres.filter((x) => x !== g) : [...v.genres, g] }))}
               />

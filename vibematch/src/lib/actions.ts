@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import type { Card, Geo } from "../types";
 import { placeUrl, nearbySearchUrl } from "./mapLinks";
+import { t } from "../i18n";
 
 const clean = (s: string) => s.replace(/[«»]/g, "").trim();
 
@@ -16,14 +17,14 @@ export function actionUrl(card: Card, geo: Geo | null = null): string {
       if (card.id >= 10_000 && card.id < 100_000) {
         return `https://www.themoviedb.org/movie/${card.id - 10_000}`;
       }
-      return `https://www.google.com/search?q=${encodeURIComponent(`watch ${title}`)}`;
+      return `https://www.google.com/search?q=${encodeURIComponent(t("search.watch", { title }))}`;
     case "book":
       return `https://www.goodreads.com/search?q=${q}`;
     case "game":
       return `https://store.steampowered.com/search/?term=${q}`;
     case "food":
-      if (card.genres.includes("готовка")) {
-        return `https://www.google.com/search?q=${encodeURIComponent(`рецепт ${title}`)}`;
+      if (card.genres.includes("cooking")) {
+        return `https://www.google.com/search?q=${encodeURIComponent(t("search.recipe", { title }))}`;
       }
       if (card.lat && card.lng) return placeUrl({ name: title, lat: card.lat, lng: card.lng });
       return nearbySearchUrl(title, geo);

@@ -6,23 +6,26 @@ const makeWeather = (id: string): Weather => ({ id, emoji: "☀️", label: "Я�
 const makeCtx = (overrides: Partial<UserContext> = {}): UserContext => ({
   mood: null, people: null, time: null, genres: [], ...overrides,
 });
+const rec = (dir: SwipeRecord["dir"], card: Card): SwipeRecord => ({
+  id: `${card.id}-${dir}`, at: new Date().toISOString(), dir, card,
+});
 
 const filmCard: Card = {
   id: 1, cat: "film", emoji: "🎬", catLabel: "Фильм",
   title: "Test Film", desc: "", tag: "", hint: "", color: "#fff", bg: "#000",
-  action: "", genres: ["фантастика", "экшн"], weather: ["any"],
+  action: "", genres: ["scifi", "action"], weather: ["any"],
 };
 
 const cafeCard: Card = {
   id: 2, cat: "place", emoji: "☕", catLabel: "Кофейня",
   title: "Test Cafe", desc: "", tag: "", hint: "", color: "#fff", bg: "#000",
-  action: "", genres: ["кофе", "уют"], weather: ["any"],
+  action: "", genres: ["coffee", "cozy"], weather: ["any"],
 };
 
 const rainCard: Card = {
   id: 3, cat: "book", emoji: "📚", catLabel: "Книга",
   title: "Test Book", desc: "", tag: "", hint: "", color: "#fff", bg: "#000",
-  action: "", genres: ["литература", "детективы"], weather: ["rain", "cloud"],
+  action: "", genres: ["literature", "mystery"], weather: ["rain", "cloud"],
 };
 
 describe("scoreCard", () => {
@@ -38,7 +41,7 @@ describe("scoreCard", () => {
   });
 
   it("boosts cards matching context genres", () => {
-    const ctx = makeCtx({ genres: ["фантастика"] });
+    const ctx = makeCtx({ genres: ["scifi"] });
     const withGenre = scoreCard(filmCard, ctx, makeWeather("sun"), []);
     const withoutGenre = scoreCard(filmCard, makeCtx(), makeWeather("sun"), []);
     expect(withGenre).toBeGreaterThan(withoutGenre);
@@ -52,8 +55,8 @@ describe("scoreCard", () => {
 
   it("learns from swipe history (liked genres get bonus)", () => {
     const history: SwipeRecord[] = [
-      { dir: "right", card: cafeCard },
-      { dir: "right", card: { ...cafeCard, id: 99 } },
+      rec("right", cafeCard),
+      rec("right", { ...cafeCard, id: 99 }),
     ];
     const scoreWithHistory = scoreCard(cafeCard, makeCtx(), makeWeather("sun"), history);
     const scoreNoHistory = scoreCard(cafeCard, makeCtx(), makeWeather("sun"), []);
@@ -70,7 +73,7 @@ describe("rankCards", () => {
 
   it("puts rain-matching card first in rain weather", () => {
     const cards = [filmCard, cafeCard, rainCard];
-    const ranked = rankCards(cards, makeCtx({ genres: ["литература"] }), makeWeather("rain"), []);
+    const ranked = rankCards(cards, makeCtx({ genres: ["literature"] }), makeWeather("rain"), []);
     expect(ranked[0].id).toBe(rainCard.id);
   });
 });

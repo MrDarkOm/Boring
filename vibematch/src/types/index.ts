@@ -1,5 +1,7 @@
 export type Category = "film" | "place" | "sale" | "book" | "game" | "food" | "activity";
 
+export type CardSource = "static" | "osm" | "tmdb";
+
 export interface Card {
   id: number;
   cat: Category;
@@ -16,6 +18,11 @@ export interface Card {
   weather: string[];
   lat?: number;
   lng?: number;
+  source?: CardSource;
+  address?: string;
+  rating?: number;
+  poster?: string | null;
+  osmId?: number;
 }
 
 export interface Mood {
@@ -65,6 +72,8 @@ export interface UserContext {
 export type SwipeDir = "left" | "right" | "up";
 
 export interface SwipeRecord {
+  id: string; // stable key for merge-sync with Supabase
+  at: string; // ISO timestamp; drives recency decay in the recommender
   dir: SwipeDir;
   card: Card;
 }

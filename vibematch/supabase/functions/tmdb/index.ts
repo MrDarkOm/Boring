@@ -15,13 +15,16 @@ interface TmdbMovie {
   release_date: string;
 }
 
+// Stable feature slugs — presentation is resolved client-side via i18n
 const GENRE_MAP: Record<number, string> = {
-  28: "экшн", 12: "приключения", 16: "мультфильм", 35: "комедия",
-  80: "криминал", 99: "документальный", 18: "драма", 10751: "семейный",
-  14: "фэнтези", 36: "исторический", 27: "ужасы", 10402: "музыкальный",
-  9648: "детектив", 10749: "романтика", 878: "фантастика", 53: "триллер",
-  10770: "телефильм", 37: "вестерн",
+  28: "action", 12: "adventure", 16: "animation", 35: "comedy",
+  80: "crime", 99: "documentary", 18: "drama", 10751: "family",
+  14: "fantasy", 36: "history", 27: "horror", 10402: "music",
+  9648: "mystery", 10749: "romance", 878: "scifi", 53: "thriller",
+  10770: "tvmovie", 37: "western",
 };
+
+const LANGS: Record<string, string> = { ru: "ru-RU", en: "en-US" };
 
 Deno.serve(async (req: Request) => {
   // CORS
@@ -34,12 +37,13 @@ Deno.serve(async (req: Request) => {
 
   const url = new URL(req.url);
   const action = url.searchParams.get("action") ?? "trending";
+  const lang = LANGS[url.searchParams.get("lang") ?? "en"] ?? "en-US";
 
   let endpoint = "";
-  if (action === "trending") endpoint = `/trending/movie/week?api_key=${apiKey}&language=ru-RU`;
+  if (action === "trending") endpoint = `/trending/movie/week?api_key=${apiKey}&language=${lang}`;
   else if (action === "search") {
     const q = url.searchParams.get("q") ?? "";
-    endpoint = `/search/movie?api_key=${apiKey}&language=ru-RU&query=${encodeURIComponent(q)}`;
+    endpoint = `/search/movie?api_key=${apiKey}&language=${lang}&query=${encodeURIComponent(q)}`;
   } else {
     return new Response("Unknown action", { status: 400 });
   }
@@ -48,21 +52,24 @@ Deno.serve(async (req: Request) => {
   const data = await res.json() as { results?: TmdbMovie[] };
   const movies = (data.results ?? []).slice(0, 10);
 
+  const isRu = lang === "ru-RU";
   const cards = movies.map((m: TmdbMovie, i: number) => ({
     id: 10000 + m.id,
     cat: "film",
     emoji: "🎬",
-    catLabel: "Фильм",
+    catLabel: isRu ? "Фильм" : "Film",
     title: m.title,
-    desc: m.overview.slice(0, 180) || "Нет описания",
+    desc: m.overview.slice(0, 180) || (isRu ? "Нет описания" : "No description"),
     tag: `★ ${m.vote_average.toFixed(1)} · ${m.release_date?.slice(0, 4) ?? ""}`,
-    hint: "TMDB · актуально сейчас",
+    hint: isRu ? "TMDB · актуально сейчас" : "TMDB · trending now",
     color: ["#7C3AED", "#E11D48", "#0EA5E9", "#D97706"][i % 4],
     bg: ["#130820", "#1A0208", "#00101A", "#180E00"][i % 4],
-    action: "Смотреть",
-    genres: m.genre_ids.map((id: number) => GENRE_MAP[id] ?? "кино").filter(Boolean),
+    action: isRu ? "Смотреть" : "Watch",
+    genres: m.genre_ids.map((id: number) => GENRE_MAP[id] ?? "cinema").filter(Boolean),
     weather: ["any"],
     poster: m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null,
+    rating: m.vote_average,
+    source: "tmdb",
   }));
 
   return new Response(JSON.stringify(cards), {

@@ -1,6 +1,7 @@
 import type { Card, Geo, Place } from "../types";
 import { haversine, fmtDist } from "./index";
 import { CAT_META } from "../data";
+import { t, type TKey } from "../i18n";
 
 // Real nearby places from OpenStreetMap Overpass API — no backend, no key.
 // Cached per rounded coordinate so the deck and the map share one request.
@@ -15,28 +16,36 @@ interface OsmElement {
 
 interface PoiKind {
   emoji: string;
-  label: string;
-  genres: string[];
-  desc: string;
+  genres: string[]; // feature slugs
 }
 
 const KINDS: Record<string, PoiKind> = {
-  cafe:           { emoji: "☕", label: "Кофейня",     genres: ["кофе", "уют"],               desc: "Кофе, десерты и место посидеть. Загляни — вдруг это твоё новое любимое место." },
-  bar:            { emoji: "🍺", label: "Бар",         genres: ["бары"],                      desc: "Вечер начинается здесь. Проверь атмосферу и что наливают." },
-  pub:            { emoji: "🍺", label: "Паб",         genres: ["бары"],                      desc: "Пиво, разговоры и никакой спешки." },
-  restaurant:     { emoji: "🍽", label: "Ресторан",    genres: ["еда"],                       desc: "Поесть не дома — уже событие. Посмотри меню и отзывы." },
-  fast_food:      { emoji: "🍔", label: "Фастфуд",     genres: ["еда"],                       desc: "Быстро, сытно и рядом." },
-  cinema:         { emoji: "🎬", label: "Кинотеатр",   genres: ["уют"],                       desc: "Большой экран решает. Глянь расписание сеансов на сегодня." },
-  theatre:        { emoji: "🎭", label: "Театр",       genres: ["уют"],                       desc: "Живая сцена — совсем другие ощущения. Проверь афишу." },
-  park:           { emoji: "🌳", label: "Парк",        genres: ["прогулки", "активный отдых"], desc: "Прогулка на свежем воздухе перезагружает лучше любого сериала." },
-  fitness_centre: { emoji: "🏋️", label: "Фитнес",      genres: ["спорт"],                     desc: "Тренировка — быстрый способ поднять настроение." },
-  sports_centre:  { emoji: "🏟", label: "Спорткомплекс", genres: ["спорт", "активный отдых"],  desc: "Залы, секции и активности — узнай, что тут есть." },
-  climbing:       { emoji: "🧗", label: "Скалодром",   genres: ["спорт", "активный отдых"],    desc: "Полазить по стенам — отличная тренировка и адреналин." },
-  museum:         { emoji: "🎨", label: "Музей",       genres: ["прогулки", "уют"],            desc: "Выставки рядом с тобой. Час-два — и мозг говорит спасибо." },
-  gallery:        { emoji: "🖼", label: "Галерея",     genres: ["прогулки", "уют"],            desc: "Искусство в шаговой доступности." },
-  books:          { emoji: "📚", label: "Книжный",     genres: ["литература", "уют"],          desc: "Зайди полистать — из книжных не выходят с пустыми руками." },
-  attraction:     { emoji: "✨", label: "Место",       genres: ["прогулки"],                   desc: "Заметная точка рядом — стоит увидеть своими глазами." },
+  cafe:           { emoji: "☕", genres: ["coffee", "cozy"] },
+  bar:            { emoji: "🍺", genres: ["bars"] },
+  pub:            { emoji: "🍺", genres: ["bars"] },
+  restaurant:     { emoji: "🍽", genres: ["food"] },
+  fast_food:      { emoji: "🍔", genres: ["food"] },
+  cinema:         { emoji: "🎬", genres: ["cozy", "cinema"] },
+  theatre:        { emoji: "🎭", genres: ["cozy", "theatre"] },
+  park:           { emoji: "🌳", genres: ["walks", "outdoor"] },
+  fitness_centre: { emoji: "🏋️", genres: ["sport"] },
+  sports_centre:  { emoji: "🏟", genres: ["sport", "outdoor"] },
+  climbing:       { emoji: "🧗", genres: ["sport", "outdoor"] },
+  museum:         { emoji: "🎨", genres: ["walks", "cozy"] },
+  gallery:        { emoji: "🖼", genres: ["walks", "cozy"] },
+  books:          { emoji: "📚", genres: ["literature", "cozy"] },
+  attraction:     { emoji: "✨", genres: ["walks"] },
 };
+
+const kindLabel = (kind: string) => t(`poi.${kind}` as TKey);
+const kindDesc = (kind: string) => t(`poi.${kind}.desc` as TKey);
+
+function addressOf(tags: Record<string, string>): string | undefined {
+  const street = tags["addr:street"];
+  if (!street) return undefined;
+  const num = tags["addr:housenumber"];
+  return num ? `${street}, ${num}` : street;
+}
 
 function kindOf(tags: Record<string, string>): string | null {
   if (tags.amenity && KINDS[tags.amenity]) return tags.amenity;
@@ -111,7 +120,7 @@ async function doFetch(geo: Geo, radius: number): Promise<NearbyResult> {
       if (seen.has(tags.name)) return null;
       seen.add(tags.name);
       const distM = haversine(geo.lat, geo.lng, lat, lng);
-      return { kind, name: tags.name, lat, lng, distM, tags };
+      return { kind, name: tags.name, lat, lng, distM, tags, osmId: el.id };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null)
     .sort((a, b) => a.distM - b.distM);
@@ -133,25 +142,29 @@ async function doFetch(geo: Geo, radius: number): Promise<NearbyResult> {
   }
 
   const meta = CAT_META.place;
-  const cards: Card[] = diverse.map((p, i) => {
+  const cards: Card[] = diverse.map((p) => {
     const k = KINDS[p.kind];
-    const hours = p.tags.opening_hours ? "Есть часы работы в карточке" : "Точка из OpenStreetMap";
     return {
-      id: 100000 + i, // stable within a session; regenerated per location
+      // stable across sessions: derived from the OSM node id, not the sort order
+      // (session-unstable ids used to corrupt saved/history references)
+      id: 100_000_000_000 + p.osmId,
       cat: "place",
       emoji: k.emoji,
-      catLabel: k.label,
+      catLabel: kindLabel(p.kind),
       title: p.name,
-      desc: k.desc,
-      tag: `${fmtDist(p.distM)} от тебя`,
-      hint: hours,
+      desc: kindDesc(p.kind),
+      tag: t("poi.tag.away", { dist: fmtDist(p.distM) }),
+      hint: p.tags.opening_hours ? t("poi.hint.hours") : t("poi.hint.osm"),
       color: meta.color,
       bg: meta.bg,
-      action: "Маршрут в картах",
+      action: t("poi.action.route"),
       genres: k.genres,
       weather: p.kind === "park" ? ["sun", "cloud"] : ["any"],
       lat: p.lat,
       lng: p.lng,
+      source: "osm",
+      osmId: p.osmId,
+      address: addressOf(p.tags),
     };
   });
 

@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import type { Card, SwipeRecord, UserContext } from "../types";
 import type { Profile } from "../types";
+import { normalizeCard, normalizeContext, normalizeHistory } from "../lib/normalize";
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,8 @@ export async function loadProfile(userId: string): Promise<{ profile: Profile; c
   if (!data) return null;
   return {
     profile: { name: data.name, avatar: data.avatar },
-    context: (data.context as UserContext) ?? { mood: null, people: null, time: null, genres: [] },
+    // normalize forever: old deploys keep writing RU strings to the cloud
+    context: normalizeContext((data.context as UserContext) ?? { mood: null, people: null, time: null, genres: [] }),
   };
 }
 
@@ -35,7 +37,7 @@ export async function syncSaved(userId: string, saved: Card[]) {
 export async function loadSaved(userId: string): Promise<Card[]> {
   if (!supabase) return [];
   const { data } = await supabase.from("saved_items").select("card_data").eq("user_id", userId);
-  return (data ?? []).map((r) => r.card_data as unknown as Card);
+  return (data ?? []).map((r) => normalizeCard(r.card_data as unknown as Card));
 }
 
 export async function updateComment(userId: string, cardId: number, comment: string) {
@@ -70,8 +72,10 @@ export async function loadHistory(userId: string): Promise<SwipeRecord[]> {
     .select("card_data, direction")
     .eq("user_id", userId)
     .order("created_at");
-  return (data ?? []).map((r) => ({
-    card: r.card_data as unknown as Card,
-    dir: r.direction as SwipeRecord["dir"],
-  }));
+  return normalizeHistory(
+    (data ?? []).map((r) => ({
+      card: r.card_data as unknown as Card,
+      dir: r.direction as SwipeRecord["dir"],
+    })) as SwipeRecord[]
+  );
 }

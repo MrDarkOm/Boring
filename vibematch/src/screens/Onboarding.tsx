@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { UserContext } from "../types";
 import { MOODS, PEOPLE, TIMES, ALL_GENRES } from "../data";
+import { t, type TKey } from "../i18n";
 import { F } from "../lib";
 
 function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
@@ -85,7 +86,7 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
               return (
                 <Chip
                   key={g}
-                  label={g}
+                  label={t(`genre.${g}` as TKey)}
                   selected={sel}
                   onClick={() =>
                     setVals((v) => ({
@@ -126,7 +127,7 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
           {PEOPLE.map((p) => (
             <Chip
               key={p}
-              label={p}
+              label={t(`people.${p}` as TKey)}
               selected={vals.people === p}
               onClick={() => {
                 setVals((v) => ({ ...v, people: p }));
@@ -142,13 +143,13 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
       sub: "Будем реалистами",
       content: (
         <div style={{ display: "flex", gap: 10 }}>
-          {TIMES.map((t) => (
+          {TIMES.map((tm) => (
             <Chip
-              key={t}
-              label={t}
-              selected={vals.time === t}
+              key={tm}
+              label={t(`time.${tm}` as TKey)}
+              selected={vals.time === tm}
               onClick={() => {
-                const nv = { ...vals, time: t };
+                const nv = { ...vals, time: tm };
                 setVals(nv);
                 setTimeout(() => onDone(nv), 260);
               }}
