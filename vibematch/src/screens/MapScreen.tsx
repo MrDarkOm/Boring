@@ -4,6 +4,7 @@ import { PLACES } from "../data";
 import { F } from "../lib";
 import { fetchNearby } from "../lib/places";
 import { openUrl } from "../lib/actions";
+import { routeUrl } from "../lib/mapLinks";
 
 export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null }) {
   const [sel, setSel] = useState<Place | null>(null);
@@ -39,7 +40,7 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
   const toY = (lat: number) => Math.max(4, Math.min(94, (1 - (lat - minLat) / (maxLat - minLat || 1)) * 100));
 
   const openRoute = (p: Place) =>
-    openUrl(`https://yandex.ru/maps/?rtext=${userLat},${userLng}~${p.lat},${p.lng}&rtt=pd`);
+    openUrl(routeUrl({ lat: userLat, lng: userLng }, { lat: p.lat, lng: p.lng }));
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0E0E1C 0%,#0A0A12 100%)" }}>

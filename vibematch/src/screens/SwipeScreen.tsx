@@ -371,7 +371,7 @@ export function SwipeScreen({
                   className="action-btn"
                   onTouchStart={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); openAction(card); }}
+                  onClick={(e) => { e.stopPropagation(); openAction(card, _geo); }}
                   style={{ width: "100%", padding: "13px 0", background: `linear-gradient(90deg,${card.color},${card.color}b8)`, border: "none", borderRadius: 14, color: "#08080E", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: F, boxShadow: `0 4px 20px ${card.color}40` }}
                 >
                   {card.action} →

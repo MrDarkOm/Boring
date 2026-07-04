@@ -20,6 +20,7 @@
     "build:android": "node scripts/build-native.mjs android"
   },
   "dependencies": {
+    "@capacitor/app-launcher": "^8.0.1",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/geolocation": "^8.2.0",

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import type { Card } from "../types";
+import type { Card, Geo } from "../types";
 import { F } from "../lib";
 import { openAction, shareCard } from "../lib/actions";
 import { Tag } from "../components/ui";
 
-export function MatchScreen({ card, onBack, onSaved }: { card: Card; onBack: () => void; onSaved: (c: Card) => void }) {
+export function MatchScreen({ card, onBack, onSaved, geo = null }: { card: Card; onBack: () => void; onSaved: (c: Card) => void; geo?: Geo | null }) {
   const [shown, setShown] = useState(false);
   const [shareState, setShareState] = useState<string | null>(null);
   const [savedNow, setSavedNow] = useState(false);
@@ -15,7 +15,7 @@ export function MatchScreen({ card, onBack, onSaved }: { card: Card; onBack: () 
   }, []);
 
   const handleShare = async () => {
-    const res = await shareCard(card);
+    const res = await shareCard(card, geo);
     if (res === "copied") setShareState("Ссылка скопирована ✓");
     else if (res === "failed") setShareState("Не удалось поделиться");
     if (res !== "shared") setTimeout(() => setShareState(null), 2200);
@@ -67,7 +67,7 @@ export function MatchScreen({ card, onBack, onSaved }: { card: Card; onBack: () 
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <button
             className="action-btn"
-            onClick={() => openAction(card)}
+            onClick={() => openAction(card, geo)}
             style={{ padding: 15, background: `linear-gradient(90deg,${card.color},${card.color}c4)`, border: "none", borderRadius: 15, color: "#08080E", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: `0 6px 26px ${card.color}4d` }}
           >
             {card.action} →

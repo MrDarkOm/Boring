@@ -195,8 +195,8 @@ export default function App() {
             </>
           )}
 
-          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={handleAddSaved} />}
-          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={handleAddSaved} />}
+          {phase === "main" && matched && <MatchScreen card={matched} geo={geo} onBack={() => setMatch(null)} onSaved={handleAddSaved} />}
+          {phase === "main" && openSaved && <MatchScreen card={openSaved} geo={geo} onBack={() => setOpenSaved(null)} onSaved={handleAddSaved} />}
         </div>
 
         {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} streak={streak} />}
