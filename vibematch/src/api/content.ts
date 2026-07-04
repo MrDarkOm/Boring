@@ -1,4 +1,3 @@
-import { supabase } from "./supabase";
 import type { Card, Geo } from "../types";
 
 // ─── Remote card shape (superset of Card) ────────────────────────────────────
@@ -35,19 +34,14 @@ export async function fetchTmdbCards(action: "trending" | "search", query?: stri
   try {
     const params = new URLSearchParams({ action });
     if (query) params.set("q", query);
-    const { data, error } = await supabase!.functions.invoke("tmdb", { body: undefined, headers: {}, method: "GET" });
-    // fallback: call function URL directly if invoke fails
-    if (error || !data) {
-      const url = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/tmdb?${params}`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""}` },
-      });
-      const cards: RemoteCard[] = await res.json();
-      toCache(key, cards);
-      return cards;
-    }
-    toCache(key, data as RemoteCard[]);
-    return data as RemoteCard[];
+    const url = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/tmdb?${params}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""}` },
+    });
+    if (!res.ok) return [];
+    const cards: RemoteCard[] = await res.json();
+    toCache(key, cards);
+    return cards;
   } catch {
     return [];
   }

@@ -54,6 +54,11 @@ export default function App() {
     if (phase === "main") recordDailyActivity();
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-advance past the auth screen once a session appears
+  useEffect(() => {
+    if (phase === "auth" && user) setPhase("main");
+  }, [phase, user]);
+
   // Sync from Supabase when user logs in
   useEffect(() => {
     if (!user) return;
@@ -163,9 +168,6 @@ export default function App() {
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
           {phase === "onboard" && <Onboarding onDone={(ctx) => { setContext(ctx); setPhase("auth"); }} />}
           {phase === "auth" && <AuthScreen onSkip={() => setPhase("main")} />}
-
-          {/* Auto-advance to main after auth */}
-          {phase === "auth" && user && (() => { setPhase("main"); return null; })()}
 
           {phase === "main" && !matched && !openSaved && (
             <>
