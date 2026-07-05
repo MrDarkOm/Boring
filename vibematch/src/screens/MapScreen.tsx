@@ -3,6 +3,7 @@ import type { Geo, Place } from "../types";
 import { F } from "../lib";
 import { fetchNearby } from "../lib/places";
 import { openUrl } from "../lib/actions";
+import { t } from "../i18n";
 import { routeUrl } from "../lib/mapLinks";
 
 export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null }) {
@@ -46,10 +47,10 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
       <div style={{ padding: "50px 20px 14px", display: "flex", alignItems: "center", gap: 12 }}>
         <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
         <div>
-          <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Рядом с тобой</div>
+          <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("map.title")}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)", marginTop: 2, fontFamily: F }}>
-            {geo?.city ? `📍 ${geo.city}` : geo ? "📍 по координатам" : "📍 геолокация недоступна"}
-            {places?.length ? ` · ${places.length} мест из OpenStreetMap` : ""}
+            {geo?.city ? `📍 ${geo.city}` : geo ? t("map.byCoords") : t("map.noGeo")}
+            {places?.length ? ` · ${t("map.fromOsm", { n: places.length })}` : ""}
           </div>
         </div>
       </div>
@@ -57,10 +58,10 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
       {isDemo && !loading && (
         <div className="fade-in" style={{ margin: "0 16px 10px", background: "rgba(251,191,36,.08)", border: "1px solid rgba(251,191,36,.2)", borderRadius: 12, padding: "9px 14px", fontSize: 12, color: "#FCD34D", fontFamily: F, lineHeight: 1.5 }}>
           {failed
-            ? "⚠️ Не удалось загрузить места поблизости. Проверь интернет и попробуй ещё раз."
+            ? t("map.loadFailed")
             : geo
-              ? "⏳ Ищем настоящие места рядом..."
-              : "⚠️ Разреши геолокацию (или зайди по HTTPS), чтобы видеть реальные места рядом."}
+              ? t("map.searching")
+              : t("map.allowGeo")}
         </div>
       )}
 
@@ -113,11 +114,11 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
             </div>
             <button
               className="action-btn"
-              aria-label="Построить маршрут"
+              aria-label={t("map.aria.route")}
               onClick={() => openRoute(sel)}
               style={{ padding: "9px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#08080E", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 700, flexShrink: 0 }}
             >
-              Маршрут →
+              {t("map.route")}
             </button>
           </div>
         </div>
@@ -135,7 +136,7 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
             </div>
             <button
               className="action-btn"
-              aria-label={`Маршрут до ${p.name}`}
+              aria-label={`${t("map.aria.route")}: ${p.name}`}
               onClick={(e) => { e.stopPropagation(); openRoute(p); }}
               style={{ padding: "6px 10px", background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 9, color: "rgba(255,255,255,.6)", fontSize: 12, cursor: "pointer", flexShrink: 0 }}
             >

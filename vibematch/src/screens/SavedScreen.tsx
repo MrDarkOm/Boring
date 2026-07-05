@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Card } from "../types";
 import { F } from "../lib";
 import { useAppStore } from "../store";
+import { t } from "../i18n";
 import { CollectionsScreen } from "./CollectionsScreen";
 
 interface Props {
@@ -27,17 +28,17 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
       <div style={{ padding: "50px 20px 14px", display: "flex", alignItems: "center", gap: 12 }}>
-        <button aria-label="Назад" className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
-        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Сохранённые</div>
+        <button aria-label={t("common.back")} className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
+        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("saved.title")}</div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           <button
             className="action-btn"
             onClick={() => setView("collections")}
             style={{ background: "rgba(124,58,237,.15)", border: "1px solid rgba(124,58,237,.3)", borderRadius: 99, color: "#A78BFA", padding: "6px 12px", cursor: "pointer", fontSize: 12, fontFamily: F }}
           >
-            📂 Коллекции
+            {t("saved.collections")}
           </button>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>{saved.length} шт</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>{t("saved.count", { n: saved.length })}</div>
         </div>
       </div>
 
@@ -45,8 +46,8 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
         {saved.length === 0 ? (
           <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.45 }}>
             <div style={{ fontSize: 44 }}>🔖</div>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", fontFamily: F }}>Пока пусто</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)", textAlign: "center" }}>Свайпай вверх чтобы сохранить</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", fontFamily: F }}>{t("saved.empty")}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)", textAlign: "center" }}>{t("saved.emptyHint")}</div>
           </div>
         ) : (
           saved.map((c, i) => (
@@ -83,7 +84,7 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
                     <input
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
-                      placeholder="Добавить заметку..."
+                      placeholder={t("saved.addNote")}
                       style={{ flex: 1, background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 10, padding: "8px 12px", color: "#fff", fontSize: 12, fontFamily: F, outline: "none" }}
                     />
                     <button className="action-btn" onClick={() => { onComment(c.id, draft); setEditing(null); setDraft(""); }} style={{ padding: "8px 12px", background: "#7C3AED", border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>OK</button>
@@ -95,7 +96,7 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
                         💬 {comments[c.id]}
                       </div>
                     ) : (
-                      <button onClick={() => setEditing(c.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,.2)", fontSize: 11, cursor: "pointer", fontFamily: F, padding: 0 }}>+ заметка</button>
+                      <button onClick={() => setEditing(c.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,.2)", fontSize: 11, cursor: "pointer", fontFamily: F, padding: 0 }}>{t("saved.plusNote")}</button>
                     )}
                   </div>
                 )}
@@ -104,7 +105,7 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
                 <div style={{ display: "flex", gap: 6 }}>
                   {collections.length > 0 && (
                     <button
-                      aria-label="Добавить в коллекцию"
+                      aria-label={t("saved.aria.addToCollection")}
                       className="action-btn"
                       onClick={() => setAddingToCard(addingToCard === c.id ? null : c.id)}
                       style={{ padding: "5px 8px", background: "rgba(124,58,237,.1)", border: "1px solid rgba(124,58,237,.2)", borderRadius: 8, color: "#A78BFA", fontSize: 13, cursor: "pointer" }}
@@ -113,7 +114,7 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
                     </button>
                   )}
                   <button
-                    aria-label="Удалить из сохранённых"
+                    aria-label={t("saved.aria.remove")}
                     className="action-btn"
                     onClick={() => removeSaved(c.id)}
                     style={{ padding: "5px 8px", background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 8, color: "#EF4444", fontSize: 13, cursor: "pointer" }}

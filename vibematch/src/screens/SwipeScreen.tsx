@@ -177,18 +177,18 @@ export function SwipeScreen({
       {/* Header */}
       <div style={{ padding: "48px 18px 8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <div style={{ fontSize: 21, fontWeight: 900, color: "var(--text-1)", fontFamily: F, letterSpacing: -0.4 }}>Для тебя</div>
+          <div style={{ fontSize: 21, fontWeight: 900, color: "var(--text-1)", fontFamily: F, letterSpacing: -0.4 }}>{t("swipe.title")}</div>
           <button
             onClick={onEditContext}
             className="action-btn"
-            aria-label="Изменить настроение и интересы"
+            aria-label={t("swipe.editAria")}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontFamily: F, display: "flex", alignItems: "center", gap: 4 }}
           >
             {[
               moodLabel,
               context.people && t(`people.${context.people}` as TKey),
               context.time && t(`time.${context.time}` as TKey),
-            ].filter(Boolean).join(" · ") || "Настроить подборку"}
+            ].filter(Boolean).join(" · ") || t("swipe.configure")}
             {_geo?.city ? ` · ${_geo.city}` : ""}
             <span style={{ color: "#A78BFA", fontSize: 10 }}>✎</span>
           </button>
@@ -232,7 +232,7 @@ export function SwipeScreen({
             color: catFilter === "all" ? "#C4B5FD" : "var(--text-3)",
           }}
         >
-          Все
+          {t("swipe.all")}
         </button>
         {categories.map((cat) => {
           const m = CAT_META[cat];
@@ -259,7 +259,7 @@ export function SwipeScreen({
 
       {weather.id === "rain" && (
         <div className="fade-in" style={{ margin: "0 18px 8px", background: "rgba(56,189,248,.09)", border: "1px solid rgba(56,189,248,.18)", borderRadius: 12, padding: "8px 14px", fontSize: 12, color: "#7DD3FC" }}>
-          🌧 {weather.desc} — показываем домашние варианты
+          {t("swipe.rainNote", { desc: weather.desc })}
         </div>
       )}
 
@@ -275,22 +275,22 @@ export function SwipeScreen({
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
             <div style={{ fontSize: 48 }}>🎉</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-1)", textAlign: "center", fontFamily: F }}>
-              {cards.length === 0 ? "В этой категории пусто" : "Всё просмотрено!"}
+              {cards.length === 0 ? t("swipe.emptyCat") : t("swipe.allDone")}
             </div>
             <div style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", lineHeight: 1.6, maxWidth: 240, fontFamily: F }}>
-              {cards.length === 0 ? "Попробуй другую категорию или сбрось фильтр." : "Ты просмотрел все карточки. Посмотри сохранённое или начни заново."}
+              {cards.length === 0 ? t("swipe.emptyCatHint") : t("swipe.allDoneHint")}
             </div>
             {cards.length > 0 ? (
               <button onClick={restartDeck} className="action-btn" style={{ marginTop: 8, padding: "12px 28px", background: "rgba(124,58,237,.2)", border: "1px solid rgba(124,58,237,.4)", borderRadius: 14, color: "#A78BFA", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: F }}>
-                Начать заново
+                {t("swipe.restart")}
               </button>
             ) : (
               <button onClick={() => pickFilter("all")} className="action-btn" style={{ marginTop: 8, padding: "12px 28px", background: "rgba(124,58,237,.2)", border: "1px solid rgba(124,58,237,.4)", borderRadius: 14, color: "#A78BFA", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: F }}>
-                Показать все
+                {t("swipe.showAll")}
               </button>
             )}
             <button onClick={() => setTab("saved")} className="action-btn" style={{ padding: "12px 28px", background: "var(--surface)", border: "1px solid var(--line-2)", borderRadius: 14, color: "var(--text-2)", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: F }}>
-              Сохранённые 🔖
+              {t("swipe.savedBtn")}
             </button>
           </div>
         ) : (
@@ -332,13 +332,13 @@ export function SwipeScreen({
 
               {/* Swipe verdict stamps */}
               <div style={{ position: "absolute", top: 20, left: 20, border: "2.5px solid #34D399", borderRadius: 8, padding: "3px 11px", opacity: likeOp, transform: "rotate(-12deg)", zIndex: 10, background: "rgba(0,0,0,.35)" }}>
-                <span style={{ color: "#34D399", fontWeight: 800, fontSize: 16 }}>ДА</span>
+                <span style={{ color: "#34D399", fontWeight: 800, fontSize: 16 }}>{t("swipe.stamp.yes")}</span>
               </div>
               <div style={{ position: "absolute", top: 20, right: 20, border: "2.5px solid #FB7185", borderRadius: 8, padding: "3px 11px", opacity: nopeOp, transform: "rotate(12deg)", zIndex: 10, background: "rgba(0,0,0,.35)" }}>
-                <span style={{ color: "#FB7185", fontWeight: 800, fontSize: 16 }}>НЕТ</span>
+                <span style={{ color: "#FB7185", fontWeight: 800, fontSize: 16 }}>{t("swipe.stamp.no")}</span>
               </div>
               <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", border: "2.5px solid #A78BFA", borderRadius: 8, padding: "3px 11px", opacity: saveOp, zIndex: 10, background: "rgba(0,0,0,.35)" }}>
-                <span style={{ color: "#A78BFA", fontWeight: 800, fontSize: 16 }}>ПОТОМ</span>
+                <span style={{ color: "#A78BFA", fontWeight: 800, fontSize: 16 }}>{t("swipe.stamp.later")}</span>
               </div>
 
               <div style={{ position: "relative", zIndex: 1 }}>
@@ -352,10 +352,10 @@ export function SwipeScreen({
                     <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
                       {/* Match % badge */}
                       <span style={{ fontSize: 10, background: "rgba(124,58,237,.18)", border: "1px solid rgba(124,58,237,.35)", color: "#C4B5FD", borderRadius: 99, padding: "2px 8px", fontWeight: 700 }}>
-                        {matchPct}% совпадение
+                        {t("swipe.matchPct", { pct: matchPct })}
                       </span>
                       {card.weather.includes(weather.id) && !card.weather.includes("any") && (
-                        <span style={{ fontSize: 10, background: "rgba(56,189,248,.14)", color: "#7DD3FC", borderRadius: 99, padding: "2px 8px", fontWeight: 600 }}>под погоду</span>
+                        <span style={{ fontSize: 10, background: "rgba(56,189,248,.14)", color: "#7DD3FC", borderRadius: 99, padding: "2px 8px", fontWeight: 600 }}>{t("swipe.weatherFit")}</span>
                       )}
                     </div>
                   </div>
@@ -400,11 +400,11 @@ export function SwipeScreen({
       {/* action buttons */}
       {!deckDone && cards.length > 0 && (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 14, padding: "6px 0 26px" }}>
-          <button aria-label="Отменить" className="swipe-btn" onClick={undo} disabled={idx === 0 && !deckDone} style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--surface)", border: "1.5px solid var(--line-2)", color: idx === 0 && !deckDone ? "rgba(255,255,255,.15)" : "#FBBF24", fontSize: 16, cursor: idx === 0 && !deckDone ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>↩</button>
-          <button aria-label="Не интересует" className="swipe-btn" onClick={() => swipe("left")} style={{ width: 58, height: 58, borderRadius: "50%", background: "rgba(251,113,133,.12)", border: "1.5px solid rgba(251,113,133,.3)", color: "#FB7185", fontSize: 21, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(251,113,133,.15)" }}>✕</button>
-          <button aria-label="Случайный выбор" className="swipe-btn" onClick={onSurprise} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(251,191,36,.1)", border: "1.5px solid rgba(251,191,36,.28)", color: "#FCD34D", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🎲</button>
-          <button aria-label="Сохранить на потом" className="swipe-btn" onClick={() => swipe("up")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(167,139,250,.1)", border: "1.5px solid rgba(167,139,250,.28)", color: "#A78BFA", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🔖</button>
-          <button aria-label="Хочу это" className="swipe-btn" onClick={() => swipe("right")} style={{ width: 58, height: 58, borderRadius: "50%", background: "rgba(52,211,153,.12)", border: "1.5px solid rgba(52,211,153,.3)", color: "#34D399", fontSize: 21, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(52,211,153,.15)" }}>✓</button>
+          <button aria-label={t("swipe.aria.undo")} className="swipe-btn" onClick={undo} disabled={idx === 0 && !deckDone} style={{ width: 46, height: 46, borderRadius: "50%", background: "var(--surface)", border: "1.5px solid var(--line-2)", color: idx === 0 && !deckDone ? "rgba(255,255,255,.15)" : "#FBBF24", fontSize: 16, cursor: idx === 0 && !deckDone ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>↩</button>
+          <button aria-label={t("swipe.aria.nope")} className="swipe-btn" onClick={() => swipe("left")} style={{ width: 58, height: 58, borderRadius: "50%", background: "rgba(251,113,133,.12)", border: "1.5px solid rgba(251,113,133,.3)", color: "#FB7185", fontSize: 21, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(251,113,133,.15)" }}>✕</button>
+          <button aria-label={t("swipe.aria.surprise")} className="swipe-btn" onClick={onSurprise} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(251,191,36,.1)", border: "1.5px solid rgba(251,191,36,.28)", color: "#FCD34D", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🎲</button>
+          <button aria-label={t("swipe.aria.save")} className="swipe-btn" onClick={() => swipe("up")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(167,139,250,.1)", border: "1.5px solid rgba(167,139,250,.28)", color: "#A78BFA", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🔖</button>
+          <button aria-label={t("swipe.aria.like")} className="swipe-btn" onClick={() => swipe("right")} style={{ width: 58, height: 58, borderRadius: "50%", background: "rgba(52,211,153,.12)", border: "1.5px solid rgba(52,211,153,.3)", color: "#34D399", fontSize: 21, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(52,211,153,.15)" }}>✓</button>
         </div>
       )}
     </div>

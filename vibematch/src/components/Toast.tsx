@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { F } from "../lib";
+import { t } from "../i18n";
 
 export function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
@@ -29,7 +30,7 @@ export function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
       <span style={{ fontSize: 20 }}>🔔</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 2, fontFamily: F }}>
-          Вайбматч
+          {t("app.name")}
         </div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", fontFamily: F }}>{msg}</div>
       </div>

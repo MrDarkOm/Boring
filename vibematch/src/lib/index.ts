@@ -1,4 +1,5 @@
 import type { SwipeRecord, UserContext } from "../types";
+import { getLocale } from "../i18n";
 
 export const F = "Inter, system-ui, sans-serif";
 
@@ -58,7 +59,7 @@ export async function fetchAiTip(
     const res = await fetch("/api/ai-tip", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ liked, disliked, context, weather: weatherLabel }),
+      body: JSON.stringify({ liked, disliked, context, weather: weatherLabel, locale: getLocale() }),
     });
     const data = await res.json();
     if (data?.tip) incrementAiCalls();

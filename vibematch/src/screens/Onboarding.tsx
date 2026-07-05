@@ -42,8 +42,8 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
 
   const steps = [
     {
-      q: "Какой сейчас вайб?",
-      sub: "Под это подберём формат",
+      q: t("onboard.q1"),
+      sub: t("onboard.sub1"),
       content: (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {MOODS.map((m) => (
@@ -76,8 +76,8 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
       ),
     },
     {
-      q: "Выбери интересы",
-      sub: "Отметь всё что нравится — уберём лишнее",
+      q: t("onboard.q2"),
+      sub: t("onboard.sub2"),
       content: (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -114,14 +114,14 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
               fontFamily: F,
             }}
           >
-            Продолжить {vals.genres.length > 0 ? `(${vals.genres.length})` : ""}
+            {t("onboard.continue")} {vals.genres.length > 0 ? `(${vals.genres.length})` : ""}
           </button>
         </div>
       ),
     },
     {
-      q: "Сколько вас?",
-      sub: "Подберём подходящий формат",
+      q: t("onboard.q3"),
+      sub: t("onboard.sub3"),
       content: (
         <div style={{ display: "flex", gap: 10 }}>
           {PEOPLE.map((p) => (
@@ -139,8 +139,8 @@ export function Onboarding({ onDone }: { onDone: (ctx: UserContext) => void }) {
       ),
     },
     {
-      q: "Сколько времени?",
-      sub: "Будем реалистами",
+      q: t("onboard.q4"),
+      sub: t("onboard.sub4"),
       content: (
         <div style={{ display: "flex", gap: 10 }}>
           {TIMES.map((tm) => (

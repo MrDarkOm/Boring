@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Card } from "./types";
 import { F } from "./lib";
+import { t, useLocale } from "./i18n";
 import { useGeoWeather } from "./hooks/useGeoWeather";
 import { useAuth } from "./hooks/useAuth";
 import { useCards } from "./hooks/useCards";
@@ -32,6 +33,7 @@ export default function App() {
   const [surprise, setSurprise] = useState(false);
   const [ctxSheet, setCtxSheet] = useState(false);
 
+  const locale = useLocale();
   const { geo, weather, setWeather, geoState } = useGeoWeather();
   const { user } = useAuth();
   const { cards: allCards } = useCards(geo);
@@ -72,7 +74,7 @@ export default function App() {
       if (remoteSaved.length) remoteSaved.forEach(addSaved);
       const remoteHistory = await loadHistory(user.id);
       if (remoteHistory.length) setSwipeHistory(remoteHistory);
-      setToast("Данные загружены из облака ☁️");
+      setToast(t("app.toast.cloudLoaded"));
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -80,38 +82,38 @@ export default function App() {
   // Sync to Supabase when state changes (debounced via useEffect)
   useEffect(() => {
     if (!user) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       syncProfile(user.id, profile, context).catch(console.error);
     }, 1000);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [user, profile, context]);
 
   useEffect(() => {
     if (!user) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       syncSaved(user.id, saved).catch(console.error);
     }, 1500);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [user, saved]);
 
   useEffect(() => {
     if (!user) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       syncHistory(user.id, swipeHistory).catch(console.error);
     }, 1500);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [user, swipeHistory]);
 
   useEffect(() => {
     if (phase === "main" && notifs.evening) {
-      const t = setTimeout(() => setToast("Вечер — самое время найти чем заняться 🌙"), 5000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setToast(t("app.toast.eveningNudge")), 5000);
+      return () => clearTimeout(timer);
     }
   }, [phase, notifs.evening]);
 
   const handleReset = () => {
     reset();
-    setToast("История и сохранения сброшены");
+    setToast(t("app.toast.resetDone"));
   };
 
   // Unlock with a celebratory toast (only on first unlock)
@@ -120,7 +122,7 @@ export default function App() {
     if (already) return;
     unlockAchievement(id);
     const def = ALL_ACHIEVEMENTS.find((a) => a.id === id);
-    if (def) setToast(`${def.emoji} Достижение: ${def.title}!`);
+    if (def) setToast(t("app.toast.achievement", { emoji: def.emoji, title: def.title }));
   };
 
   const handleSwipeHistory = (h: typeof swipeHistory) => {
@@ -143,7 +145,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell" style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div key={locale} className="app-shell" style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           width: "min(390px, 100vw)",

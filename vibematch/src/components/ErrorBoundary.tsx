@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { F } from "../lib";
+import { t } from "../i18n";
 
 interface Props {
   children: ReactNode;
@@ -45,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
             }}
           >
             <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Что-то пошло не так</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{t("err.title")}</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", marginBottom: 24, lineHeight: 1.6 }}>
               {this.state.error.message}
             </div>
@@ -63,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 fontFamily: F,
               }}
             >
-              Попробовать снова
+              {t("err.retry")}
             </button>
           </div>
         </div>

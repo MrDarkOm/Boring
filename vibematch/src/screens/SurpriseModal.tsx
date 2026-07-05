@@ -4,13 +4,9 @@ import { getStaticCards } from "../data";
 import { F } from "../lib";
 import { rankCards } from "../lib/scoring";
 import { useAppStore } from "../store";
+import { t } from "../i18n";
 
-const LOADING_STEPS = [
-  "Анализирую твои предпочтения...",
-  "Смотрю на погоду и время...",
-  "Учитываю историю свайпов...",
-  "Выбираю лучшее для тебя...",
-];
+const LOADING_STEP_KEYS = ["surprise.step1", "surprise.step2", "surprise.step3", "surprise.step4"] as const;
 
 export function SurpriseModal({
   onClose,
@@ -31,7 +27,7 @@ export function SurpriseModal({
   useEffect(() => {
     // Animate through loading steps, then resolve
     const timers: ReturnType<typeof setTimeout>[] = [];
-    LOADING_STEPS.forEach((_, i) => {
+    LOADING_STEP_KEYS.forEach((_, i) => {
       timers.push(setTimeout(() => setStep(i), i * 600));
     });
 
@@ -50,7 +46,7 @@ export function SurpriseModal({
         // Pick from the top 3 to keep some surprise
         const topN = ranked.slice(0, Math.min(3, ranked.length));
         setPick(topN[Math.floor(Math.random() * topN.length)]);
-      }, LOADING_STEPS.length * 600 + 200)
+      }, LOADING_STEP_KEYS.length * 600 + 200)
     );
 
     return () => timers.forEach(clearTimeout);
@@ -59,20 +55,20 @@ export function SurpriseModal({
 
   const reasonLabels: string[] = [];
   if (pick) {
-    if (pick.genres.some((g) => context.genres?.includes(g))) reasonLabels.push("твои интересы");
+    if (pick.genres.some((g) => context.genres?.includes(g))) reasonLabels.push(t("surprise.reason.interests"));
     if (context.mood) {
       const moodMatch =
-        (context.mood === "active" && pick.genres.some((g) => ["спорт", "активный отдых"].includes(g))) ||
+        (context.mood === "active" && pick.genres.some((g) => ["sport", "outdoor"].includes(g))) ||
         (context.mood === "lazy" && (pick.cat === "film" || pick.cat === "book")) ||
-        (context.mood === "social" && pick.genres.some((g) => ["бары", "квесты"].includes(g))) ||
-        (context.mood === "calm" && pick.genres.some((g) => ["кофе", "уют"].includes(g)));
-      if (moodMatch) reasonLabels.push("твоё настроение");
+        (context.mood === "social" && pick.genres.some((g) => ["bars", "quests"].includes(g))) ||
+        (context.mood === "calm" && pick.genres.some((g) => ["coffee", "cozy"].includes(g)));
+      if (moodMatch) reasonLabels.push(t("surprise.reason.mood"));
     }
     const h = new Date().getHours();
     const isEvening = h >= 18 && h < 23;
-    if (isEvening && pick.genres.some((g) => ["бары", "кино", "еда", "музыка"].includes(g))) reasonLabels.push("вечернее время");
+    if (isEvening && pick.genres.some((g) => ["bars", "cinema", "food", "music"].includes(g))) reasonLabels.push(t("surprise.reason.evening"));
     const learned = swipeHistory.filter((s) => s.dir === "right" && s.card.genres.some((g) => pick.genres.includes(g)));
-    if (learned.length > 0) reasonLabels.push("историю свайпов");
+    if (learned.length > 0) reasonLabels.push(t("surprise.reason.history"));
   }
 
   return (
@@ -106,16 +102,16 @@ export function SurpriseModal({
         {!pick ? (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ fontSize: 52, marginBottom: 16, animation: "splashPulse 1.2s ease-in-out infinite" }}>✨</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", fontFamily: F, marginBottom: 8 }}>Решаю за тебя</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", fontFamily: F, marginBottom: 8 }}>{t("surprise.deciding")}</div>
             <div
               key={step}
               className="fade-in"
               style={{ fontSize: 13, color: "rgba(255,255,255,.45)", fontFamily: F, minHeight: 20 }}
             >
-              {LOADING_STEPS[step]}
+              {t(LOADING_STEP_KEYS[step])}
             </div>
             <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 18 }}>
-              {LOADING_STEPS.map((_, i) => (
+              {LOADING_STEP_KEYS.map((_, i) => (
                 <div
                   key={i}
                   style={{
@@ -133,11 +129,10 @@ export function SurpriseModal({
           <>
             <div style={{ textAlign: "center", marginBottom: 18 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#A78BFA", textTransform: "uppercase", letterSpacing: 2, marginBottom: 6 }}>
-                Решено за тебя
+                {t("surprise.title")}
               </div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", fontFamily: F }}>
-                Выбрано специально на основе{" "}
-                {reasonLabels.length > 0 ? reasonLabels.join(", ") : "твоего профиля"}
+                {t("surprise.basedOn", { reasons: reasonLabels.length > 0 ? reasonLabels.join(", ") : t("surprise.reason.profile") })}
               </div>
             </div>
 
@@ -200,7 +195,7 @@ export function SurpriseModal({
                   fontFamily: F,
                 }}
               >
-                Отлично! →
+                {t("common.great")}
               </button>
               <button
                 className="action-btn"
@@ -218,7 +213,7 @@ export function SurpriseModal({
                   fontFamily: F,
                 }}
               >
-                Нет
+                {t("common.no")}
               </button>
             </div>
           </>

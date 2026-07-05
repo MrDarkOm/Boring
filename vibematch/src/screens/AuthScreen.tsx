@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../api/supabase";
 import { F } from "../lib";
+import { t } from "../i18n";
 
 interface Props {
   onSkip: () => void;
@@ -14,7 +15,7 @@ export function AuthScreen({ onSkip }: Props) {
 
   const sendMagicLink = async () => {
     if (!email.trim()) return;
-    if (!supabase) { setError("Auth not configured (no Supabase URL)"); return; }
+    if (!supabase) { setError(t("auth.notConfigured")); return; }
     setLoading(true);
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({
@@ -37,17 +38,17 @@ export function AuthScreen({ onSkip }: Props) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: F }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8, textAlign: "center" }}>Войдите или создайте аккаунт</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8, textAlign: "center" }}>{t("auth.title")}</div>
       <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", marginBottom: 32, textAlign: "center", lineHeight: 1.6 }}>
-        Сохраняйте избранное и историю на всех устройствах
+        {t("auth.subtitle")}
       </div>
 
       {sent ? (
         <div style={{ background: "rgba(34,197,94,.1)", border: "1px solid rgba(34,197,94,.25)", borderRadius: 16, padding: "20px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 28, marginBottom: 10 }}>📬</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#22C55E", marginBottom: 6 }}>Письмо отправлено!</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#22C55E", marginBottom: 6 }}>{t("auth.sent")}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.6 }}>
-            Проверьте {email} и нажмите ссылку для входа.
+            {t("auth.sentHint", { email })}
           </div>
         </div>
       ) : (
@@ -75,10 +76,10 @@ export function AuthScreen({ onSkip }: Props) {
               cursor: loading ? "default" : "pointer", fontFamily: F, marginBottom: 12,
             }}
           >
-            {loading ? "Отправляем..." : "Войти по email →"}
+            {loading ? t("auth.sending") : t("auth.emailBtn")}
           </button>
 
-          <div style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,.25)", marginBottom: 12 }}>или</div>
+          <div style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,.25)", marginBottom: 12 }}>{t("common.or")}</div>
 
           <button
             onClick={signInWithGoogle}
@@ -89,7 +90,7 @@ export function AuthScreen({ onSkip }: Props) {
               cursor: "pointer", fontFamily: F,
             }}
           >
-            🔑 Войти через Google
+            {t("auth.google")}
           </button>
         </div>
       )}
@@ -98,7 +99,7 @@ export function AuthScreen({ onSkip }: Props) {
         onClick={onSkip}
         style={{ marginTop: 24, fontSize: 13, color: "rgba(255,255,255,.3)", background: "none", border: "none", cursor: "pointer", fontFamily: F }}
       >
-        Продолжить без аккаунта →
+        {t("auth.skip")}
       </button>
     </div>
   );

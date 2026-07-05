@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Card, Notifs, Profile, SwipeRecord, UserContext } from "../types";
 import { migrateToV2 } from "./migrations";
+import { t, type TKey } from "../i18n";
 
 // ─── Session slice ────────────────────────────────────────────────────────────
 interface SessionSlice {
@@ -69,19 +70,18 @@ interface StreakSlice {
 
 export type AppStore = SessionSlice & LibrarySlice & ContextSlice & DeckSlice & StreakSlice;
 
-// All possible achievements
-export const ALL_ACHIEVEMENTS: Achievement[] = [
-  { id: "first_swipe",   emoji: "👋", title: "Первый шаг",    desc: "Сделай первый свайп" },
-  { id: "swipe_10",      emoji: "🔟", title: "10 свайпов",    desc: "Просвайпай 10 карточек" },
-  { id: "swipe_50",      emoji: "🌟", title: "Мастер свайпа", desc: "Просвайпай 50 карточек" },
-  { id: "like_5",        emoji: "❤️",  title: "Придирчивый",  desc: "Поставь 5 лайков" },
-  { id: "save_3",        emoji: "🔖",  title: "Коллекционер", desc: "Сохрани 3 карточки" },
-  { id: "streak_3",      emoji: "🔥",  title: "Три дня подряд", desc: "Заходи 3 дня подряд" },
-  { id: "streak_7",      emoji: "⚡",  title: "Недельный вайб", desc: "7 дней подряд" },
-  { id: "coop_first",    emoji: "👥",  title: "Командный игрок", desc: "Сыграй в совместный режим" },
-  { id: "collection_1",  emoji: "📂",  title: "Организатор",  desc: "Создай первую коллекцию" },
-  { id: "all_cats",      emoji: "🎯",  title: "Всеядный",     desc: "Лайкни все категории" },
-];
+// All possible achievements; titles resolve through i18n at read time
+const ACH_EMOJI: Record<string, string> = {
+  first_swipe: "👋", swipe_10: "🔟", swipe_50: "🌟", like_5: "❤️", save_3: "🔖",
+  streak_3: "🔥", streak_7: "⚡", coop_first: "👥", collection_1: "📂", all_cats: "🎯",
+};
+
+export const ALL_ACHIEVEMENTS: Achievement[] = Object.keys(ACH_EMOJI).map((id) => ({
+  id,
+  emoji: ACH_EMOJI[id],
+  get title() { return t(`ach.${id}.title` as TKey); },
+  get desc() { return t(`ach.${id}.desc` as TKey); },
+}));
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -160,7 +160,7 @@ export const useAppStore = create<AppStore>()(
         set((st) => ({
           achievements: [
             ...st.achievements.filter((a) => a.id !== id),
-            { ...def, unlockedAt: new Date().toISOString() },
+            { id: def.id, emoji: def.emoji, title: def.title, desc: def.desc, unlockedAt: new Date().toISOString() },
           ],
         }));
       },

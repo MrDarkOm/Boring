@@ -51,9 +51,9 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
         }}
       >
         <div style={{ width: 40, height: 4, borderRadius: 99, background: "rgba(255,255,255,.18)", margin: "0 auto 16px" }} />
-        <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-1)", fontFamily: F, marginBottom: 16 }}>Настроить подборку</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-1)", fontFamily: F, marginBottom: 16 }}>{t("ctx.title")}</div>
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>Вайб</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>{t("ctx.vibe")}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
           {MOODS.map((m) => (
             <button
@@ -72,14 +72,14 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
           ))}
         </div>
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>Сколько вас</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>{t("ctx.people")}</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
           {PEOPLE.map((p) => (
             <Chip key={p} label={t(`people.${p}` as TKey)} selected={vals.people === p} onClick={() => setVals((v) => ({ ...v, people: p }))} />
           ))}
         </div>
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>Сколько времени</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>{t("ctx.time")}</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
           {TIMES.map((tm) => (
             <Chip key={tm} label={t(`time.${tm}` as TKey)} selected={vals.time === tm} onClick={() => setVals((v) => ({ ...v, time: tm }))} />
@@ -87,7 +87,7 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: 1.4, marginBottom: 8 }}>
-          Интересы {vals.genres.length > 0 && <span style={{ color: "#A78BFA" }}>· {vals.genres.length}</span>}
+          {t("ctx.interests")} {vals.genres.length > 0 && <span style={{ color: "#A78BFA" }}>· {vals.genres.length}</span>}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 22 }}>
           {ALL_GENRES.map((g) => {
@@ -114,14 +114,14 @@ export function ContextSheet({ context, onSave, onClose }: Props) {
               boxShadow: "0 6px 24px rgba(124,58,237,.4)",
             }}
           >
-            Показать подборку
+            {t("ctx.show")}
           </button>
           <button
             className="action-btn"
             onClick={onClose}
             style={{ padding: "14px 18px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 14, color: "var(--text-3)", fontSize: 14, cursor: "pointer", fontFamily: F }}
           >
-            Отмена
+            {t("common.cancel")}
           </button>
         </div>
       </div>

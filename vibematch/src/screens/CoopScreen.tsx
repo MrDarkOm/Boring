@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Card } from "../types";
 import { getStaticCards } from "../data";
-import { useLocale } from "../i18n";
+import { t, useLocale } from "../i18n";
 import { F } from "../lib";
 import { Glow, Tag } from "../components/ui";
 import { supabase } from "../api/supabase";
@@ -76,18 +76,18 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
   }, [deck]);
 
   const handleCreate = async () => {
-    if (!isAuthed) { setError("Войдите в аккаунт для совместного режима"); return; }
+    if (!isAuthed) { setError(t("coop.needAuthErr")); return; }
     const newCode = await createCoopSession(user.id);
-    if (!newCode) { setError("Не удалось создать комнату"); return; }
+    if (!newCode) { setError(t("coop.createFail")); return; }
     useAppStore.getState().unlockAchievement("coop_first");
     setCode(newCode);
     setPhase("waiting");
   };
 
   const handleJoin = async () => {
-    if (!isAuthed) { setError("Войдите в аккаунт для совместного режима"); return; }
+    if (!isAuthed) { setError(t("coop.needAuthErr")); return; }
     const joinedId = await joinCoopSession(joinCode.trim().toUpperCase(), user.id);
-    if (!joinedId) { setError("Комната не найдена или уже занята"); return; }
+    if (!joinedId) { setError(t("coop.joinFail")); return; }
     useAppStore.getState().unlockAchievement("coop_first");
     const session = await getCoopSession(joinCode.trim().toUpperCase());
     setSessionId(joinedId);
@@ -125,12 +125,12 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     return (
       <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", gap: 20, textAlign: "center", background: `linear-gradient(180deg,${result.bg} 0%,#0A0A0A 60%)` }}>
         <div className="pop-in" style={{ fontSize: 54 }}>🎯</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: result.color, textTransform: "uppercase", letterSpacing: 2.5 }}>Совпадение!</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: result.color, textTransform: "uppercase", letterSpacing: 2.5 }}>{t("coop.match")}</div>
         <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>{result.title}</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.48)", lineHeight: 1.6, maxWidth: 300 }}>{result.desc}</div>
         <Tag>{result.tag}</Tag>
         <button className="action-btn" style={{ padding: "14px 36px", background: result.color, border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, marginTop: 8 }}>{result.action} →</button>
-        <button className="action-btn" onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,.35)", fontSize: 13, cursor: "pointer", fontFamily: F }}>← На главную</button>
+        <button className="action-btn" onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,.35)", fontSize: 13, cursor: "pointer", fontFamily: F }}>{t("coop.home")}</button>
       </div>
     );
   }
@@ -142,13 +142,13 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
         <button className="action-btn" onClick={onBack} style={{ alignSelf: "flex-start", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, textAlign: "center" }}>
           <div style={{ fontSize: 48 }}>⏳</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>Ждём друга...</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{t("coop.waiting")}</div>
           <div style={{ background: "rgba(124,58,237,.12)", border: "2px dashed rgba(124,58,237,.35)", borderRadius: 20, padding: "22px 40px" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 7, letterSpacing: 1 }}>КОД КОМНАТЫ</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 7, letterSpacing: 1 }}>{t("coop.roomCode")}</div>
             <div style={{ fontSize: 36, fontWeight: 900, color: "#A78BFA", letterSpacing: 5, fontFamily: F }}>{code}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", marginTop: 6 }}>Поделись с другом</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", marginTop: 6 }}>{t("coop.shareCode")}</div>
           </div>
-          {guestJoined && <div style={{ fontSize: 14, color: "#22C55E" }}>Друг подключился!</div>}
+          {guestJoined && <div style={{ fontSize: 14, color: "#22C55E" }}>{t("coop.friendJoined")}</div>}
           <div style={{ width: 9, height: 9, borderRadius: "50%", border: "2px solid #7C3AED", borderTopColor: "transparent", animation: "spin 1s linear infinite" }} />
         </div>
       </div>
@@ -160,7 +160,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
         <div style={{ padding: "50px 20px 10px", display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>Ваш вайб</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("coop.yourVibe")}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{code && `#${code} · `}{idx + 1}/{deck.length}</div>
         </div>
         <div style={{ flex: 1, position: "relative", margin: "0 16px 10px" }}>
@@ -189,10 +189,10 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
         <button className="action-btn" onClick={() => setPhase("lobby")} style={{ alignSelf: "flex-start", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
           <div style={{ fontSize: 48 }}>🏠</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>Создать комнату</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", lineHeight: 1.6 }}>Друг войдёт по коду — и начнёте свайпать</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{t("coop.create")}</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", lineHeight: 1.6 }}>{t("coop.createHint")}</div>
           {error && <div style={{ fontSize: 12, color: "#EF4444" }}>{error}</div>}
-          <button onClick={handleCreate} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F }}>Создать →</button>
+          <button onClick={handleCreate} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F }}>{t("coop.createBtn")}</button>
         </div>
       </div>
     );
@@ -204,7 +204,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
         <button className="action-btn" onClick={() => setPhase("lobby")} style={{ alignSelf: "flex-start", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
           <div style={{ fontSize: 48 }}>🔗</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>Войти в комнату</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{t("coop.joinTitle")}</div>
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
@@ -213,7 +213,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
             style={{ width: 160, padding: "14px 16px", background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 14, color: "#fff", fontSize: 22, fontWeight: 800, letterSpacing: 6, textAlign: "center", fontFamily: F, outline: "none" }}
           />
           {error && <div style={{ fontSize: 12, color: "#EF4444" }}>{error}</div>}
-          <button onClick={handleJoin} disabled={joinCode.length < 4} style={{ padding: "14px 40px", background: joinCode.length >= 4 ? "#7C3AED" : "rgba(124,58,237,.3)", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: joinCode.length >= 4 ? "pointer" : "default", fontFamily: F }}>Войти →</button>
+          <button onClick={handleJoin} disabled={joinCode.length < 4} style={{ padding: "14px 40px", background: joinCode.length >= 4 ? "#7C3AED" : "rgba(124,58,237,.3)", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: joinCode.length >= 4 ? "pointer" : "default", fontFamily: F }}>{t("coop.joinBtn")}</button>
         </div>
       </div>
     );
@@ -223,28 +223,28 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", padding: "50px 22px 36px", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)", gap: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
-        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Совместный режим</div>
+        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("coop.title")}</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, textAlign: "center" }}>
         <div style={{ fontSize: 50 }}>👥</div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>Найдите общий вайб</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("coop.heading")}</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", lineHeight: 1.65, maxWidth: 290 }}>
-          Свайпайте независимо — система найдёт то, что понравилось обоим
+          {t("coop.subtitle")}
         </div>
         {!isAuthed && (
           <div style={{ fontSize: 12, color: "#FBBF24", background: "rgba(251,191,36,.08)", border: "1px solid rgba(251,191,36,.2)", borderRadius: 10, padding: "8px 14px" }}>
-            Войдите в аккаунт для онлайн-режима
+            {t("coop.needAuth")}
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 260 }}>
           <button onClick={() => setPhase("create")} style={{ padding: "14px 0", background: "#7C3AED", border: "none", borderRadius: 14, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 22px rgba(124,58,237,.4)" }}>
-            Создать комнату
+            {t("coop.create")}
           </button>
           <button onClick={() => setPhase("join")} style={{ padding: "14px 0", background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.15)", borderRadius: 14, color: "#fff", fontWeight: 600, fontSize: 15, cursor: "pointer", fontFamily: F }}>
-            Войти по коду
+            {t("coop.join")}
           </button>
           <button onClick={() => { setPhase("swipe"); }} style={{ padding: "11px 0", background: "none", border: "none", color: "rgba(255,255,255,.3)", fontSize: 13, cursor: "pointer", fontFamily: F }}>
-            Режим демо (без аккаунта)
+            {t("coop.demo")}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { F } from "../lib";
+import { t } from "../i18n";
 
 export function Splash({ onDone }: { onDone: () => void }) {
   const [out, setOut] = useState(false);
@@ -34,9 +35,9 @@ export function Splash({ onDone }: { onDone: () => void }) {
       <div className="float-orb" style={{ position: "absolute", top: "60%", left: "20%", width: 90, height: 90, borderRadius: "50%", background: "#FB7185", filter: "blur(65px)", opacity: 0.14, animationDelay: "-7s" }} />
 
       <div style={{ fontSize: 76, animation: "splashPulse 1.8s ease-in-out infinite", position: "relative" }}>✨</div>
-      <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: -1.5, fontFamily: F, position: "relative" }}>вайбматч</div>
+      <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: -1.5, fontFamily: F, position: "relative", textTransform: "lowercase" }}>{t("app.name")}</div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", letterSpacing: 3.5, textTransform: "uppercase", position: "relative", fontFamily: F }}>
-        найди чем заняться
+        {t("app.splashTagline")}
       </div>
     </div>
   );

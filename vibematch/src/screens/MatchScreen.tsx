@@ -3,6 +3,7 @@ import type { Card, Geo } from "../types";
 import { F } from "../lib";
 import { openAction, shareCard } from "../lib/actions";
 import { Tag } from "../components/ui";
+import { t } from "../i18n";
 
 export function MatchScreen({ card, onBack, onSaved, geo = null }: { card: Card; onBack: () => void; onSaved: (c: Card) => void; geo?: Geo | null }) {
   const [shown, setShown] = useState(false);
@@ -16,8 +17,8 @@ export function MatchScreen({ card, onBack, onSaved, geo = null }: { card: Card;
 
   const handleShare = async () => {
     const res = await shareCard(card, geo);
-    if (res === "copied") setShareState("Ссылка скопирована ✓");
-    else if (res === "failed") setShareState("Не удалось поделиться");
+    if (res === "copied") setShareState(t("match.copied"));
+    else if (res === "failed") setShareState(t("match.shareFailed"));
     if (res !== "shared") setTimeout(() => setShareState(null), 2200);
   };
 
@@ -43,13 +44,13 @@ export function MatchScreen({ card, onBack, onSaved, geo = null }: { card: Card;
       </div>
       <div style={{ padding: "50px 22px 0", position: "relative" }}>
         <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 15px", cursor: "pointer", fontSize: 13, fontFamily: F }}>
-          ← Назад
+          {t("match.back")}
         </button>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "20px 24px", gap: 18, position: "relative" }} className="fade-up">
         <div style={{ textAlign: "center" }}>
           <div className="pop-in" style={{ fontSize: 50, marginBottom: 5 }}>✨</div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: card.color, textTransform: "uppercase", letterSpacing: 3 }}>Это матч!</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: card.color, textTransform: "uppercase", letterSpacing: 3 }}>{t("match.title")}</div>
         </div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.09)", borderRadius: 22, padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 13 }}>
@@ -78,14 +79,14 @@ export function MatchScreen({ card, onBack, onSaved, geo = null }: { card: Card;
               onClick={() => { onSaved(card); setSavedNow(true); setTimeout(onBack, 550); }}
               style={{ flex: 1, padding: 12, background: savedNow ? "rgba(52,211,153,.15)" : "rgba(167,139,250,.1)", border: `1px solid ${savedNow ? "rgba(52,211,153,.35)" : "rgba(167,139,250,.22)"}`, borderRadius: 14, color: savedNow ? "#34D399" : "#A78BFA", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}
             >
-              {savedNow ? "✓ Сохранено" : "🔖 Сохранить"}
+              {savedNow ? t("match.saved") : t("match.save")}
             </button>
             <button
               className="action-btn"
               onClick={handleShare}
               style={{ flex: 1, padding: 12, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 14, color: "rgba(255,255,255,.55)", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}
             >
-              {shareState ?? "📤 Поделиться"}
+              {shareState ?? t("match.share")}
             </button>
           </div>
         </div>

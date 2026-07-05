@@ -1,12 +1,13 @@
 import { F } from "../lib";
+import { t } from "../i18n";
 
 const ITEMS = [
-  { id: "swipe",    icon: "✨", label: "Для тебя" },
-  { id: "map",      icon: "🗺",  label: "Рядом" },
-  { id: "coop",     icon: "👥", label: "Вместе" },
-  { id: "stats",    icon: "📊", label: "Стата" },
-  { id: "saved",    icon: "🔖", label: "Моё" },
-  { id: "settings", icon: "⚙",  label: "Ещё" },
+  { id: "swipe",    icon: "✨", get label() { return t("nav.forYou"); } },
+  { id: "map",      icon: "🗺",  get label() { return t("nav.nearby"); } },
+  { id: "coop",     icon: "👥", get label() { return t("nav.together"); } },
+  { id: "stats",    icon: "📊", get label() { return t("nav.stats"); } },
+  { id: "saved",    icon: "🔖", get label() { return t("nav.saved"); } },
+  { id: "settings", icon: "⚙",  get label() { return t("nav.more"); } },
 ];
 
 interface Props {

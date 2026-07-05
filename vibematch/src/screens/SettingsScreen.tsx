@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { GeoState, Notifs, Profile, Weather } from "../types";
 import { WEATHERS } from "../data";
 import { F } from "../lib";
+import { t, getLocale, setLocale, type Locale } from "../i18n";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -41,10 +42,10 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
       <div style={{ padding: "50px 20px 14px", display: "flex", alignItems: "center", gap: 12 }}>
         <button className="action-btn" onClick={onBack} style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 99, color: "rgba(255,255,255,.55)", padding: "7px 14px", cursor: "pointer", fontSize: 13, fontFamily: F }}>←</button>
-        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>Настройки</div>
+        <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F }}>{t("settings.title")}</div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Профиль</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.profile")}</div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "20px 18px", display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <div style={{ width: 52, height: 52, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#0EA5E9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{profile.avatar}</div>
           <div style={{ flex: 1 }}>
@@ -58,17 +59,31 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
                 {profile.name} <span style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>✎</span>
               </div>
             )}
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", marginTop: 3, fontFamily: F }}>вайбматчер</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", marginTop: 3, fontFamily: F }}>{t("settings.tagline")}</div>
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Погода</div>
+
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.language")}</div>
+        <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "12px 14px", marginBottom: 20, display: "flex", gap: 8 }}>
+          {(["ru", "en"] as Locale[]).map((l) => (
+            <button
+              key={l}
+              className="action-btn"
+              onClick={() => setLocale(l)}
+              style={{ flex: 1, padding: "11px 0", borderRadius: 12, cursor: "pointer", fontFamily: F, fontWeight: 700, fontSize: 14, background: getLocale() === l ? "rgba(124,58,237,.2)" : "rgba(255,255,255,.05)", border: `1.5px solid ${getLocale() === l ? "#7C3AED" : "rgba(255,255,255,.1)"}`, color: getLocale() === l ? "#C4B5FD" : "rgba(255,255,255,.6)" }}
+            >
+              {l === "ru" ? "🇷🇺 Русский" : "🇬🇧 English"}
+            </button>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.weather")}</div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "16px 18px", marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 4, fontFamily: F }}>Влияет на подборку карточек</div>
-          {geoState === "ok" && <div style={{ fontSize: 11, color: "#22C55E", marginBottom: 12, fontFamily: F }}>✓ Определено по геолокации · {weather.temp}°C</div>}
-          {geoState === "approx" && <div style={{ fontSize: 11, color: "#38BDF8", marginBottom: 12, fontFamily: F }}>≈ Примерно по IP · {weather.temp}°C — разреши геолокацию для точности</div>}
-          {geoState === "loading" && <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 12, fontFamily: F }}>Определяю местоположение...</div>}
-          {(geoState === "denied" || geoState === "error") && <div style={{ fontSize: 11, color: "#F59E0B", marginBottom: 12, fontFamily: F }}>Геолокация недоступна — выберите вручную</div>}
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 4, fontFamily: F }}>{t("settings.weatherHint")}</div>
+          {geoState === "ok" && <div style={{ fontSize: 11, color: "#22C55E", marginBottom: 12, fontFamily: F }}>{t("settings.geoOk", { t: weather.temp })}</div>}
+          {geoState === "approx" && <div style={{ fontSize: 11, color: "#38BDF8", marginBottom: 12, fontFamily: F }}>{t("settings.geoApprox", { t: weather.temp })}</div>}
+          {geoState === "loading" && <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 12, fontFamily: F }}>{t("settings.geoLoading")}</div>}
+          {(geoState === "denied" || geoState === "error") && <div style={{ fontSize: 11, color: "#F59E0B", marginBottom: 12, fontFamily: F }}>{t("settings.geoFail")}</div>}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {WEATHERS.map((w) => (
               <button key={w.id} className="action-btn" onClick={() => onWeather(w)} style={{ flex: "1 1 30%", padding: "10px 6px", borderRadius: 12, cursor: "pointer", background: weather.id === w.id ? "rgba(124,58,237,.2)" : "rgba(255,255,255,.05)", border: `1.5px solid ${weather.id === w.id ? "#7C3AED" : "rgba(255,255,255,.1)"}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, fontFamily: F }}>
@@ -80,17 +95,17 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Уведомления</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.notifs")}</div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "4px 18px", marginBottom: 20 }}>
-          <Row label="Вечерние подсказки"><Toggle on={notifs.evening} onToggle={() => onNotifs({ ...notifs, evening: !notifs.evening })} /></Row>
-          <Row label="Скидки рядом"><Toggle on={notifs.sales} onToggle={() => onNotifs({ ...notifs, sales: !notifs.sales })} /></Row>
-          <Row label="Новые места" border={false}><Toggle on={notifs.places} onToggle={() => onNotifs({ ...notifs, places: !notifs.places })} /></Row>
+          <Row label={t("settings.notif.evening")}><Toggle on={notifs.evening} onToggle={() => onNotifs({ ...notifs, evening: !notifs.evening })} /></Row>
+          <Row label={t("settings.notif.sales")}><Toggle on={notifs.sales} onToggle={() => onNotifs({ ...notifs, sales: !notifs.sales })} /></Row>
+          <Row label={t("settings.notif.places")} border={false}><Toggle on={notifs.places} onToggle={() => onNotifs({ ...notifs, places: !notifs.places })} /></Row>
         </div>
 
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Сброс</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.reset")}</div>
         <div style={{ background: "rgba(239,68,68,.05)", border: "1px solid rgba(239,68,68,.14)", borderRadius: 18, padding: "4px 18px" }}>
-          <Row label="Сбросить историю и сохранения" border={false}>
-            <button className="action-btn" onClick={onReset} style={{ padding: "7px 14px", background: "rgba(239,68,68,.14)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 10, color: "#EF4444", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>Сброс</button>
+          <Row label={t("settings.resetRow")} border={false}>
+            <button className="action-btn" onClick={onReset} style={{ padding: "7px 14px", background: "rgba(239,68,68,.14)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 10, color: "#EF4444", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>{t("settings.resetBtn")}</button>
           </Row>
         </div>
       </div>
