@@ -359,4 +359,15 @@ export const en: Record<keyof typeof ru, string> = {
   "app.splashTagline": "find something to do",
   "err.title": "Something went wrong",
   "err.retry": "Try again",
+
+  // ── Account (phase 5) ──
+  "auth.apple": " Sign in with Apple",
+  "settings.account": "Account",
+  "settings.signedInAs": "Signed in as",
+  "settings.guest": "No account — data lives on this device only",
+  "settings.logout": "Sign out",
+  "settings.deleteAccount": "Delete account",
+  "settings.deleteConfirm": "Delete your account and all cloud data? This cannot be undone.",
+  "settings.deleteFailed": "Couldn't delete the account",
+  "app.toast.loggedOut": "Signed out",
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Card } from "./types";
 import { F } from "./lib";
 import { t, useLocale } from "./i18n";
@@ -7,7 +7,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useCards } from "./hooks/useCards";
 import { useAppStore, ALL_ACHIEVEMENTS } from "./store";
 import { ContextSheet } from "./components/ContextSheet";
-import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory } from "./api/sync";
+import { loadProfile, loadSaved, loadHistory, syncProfile, syncSaved, syncHistory, mergeHistories } from "./api/sync";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
 import { AuthScreen } from "./screens/AuthScreen";
@@ -61,28 +61,38 @@ export default function App() {
     if (phase === "auth" && user) setPhase("main");
   }, [phase, user]);
 
-  // Sync from Supabase when user logs in
+  // Merge-sync from Supabase on login; pushes are gated until this finishes
+  // so an empty fresh device can never wipe cloud data.
+  const syncReady = useRef(false);
   useEffect(() => {
-    if (!user) return;
+    if (!user) { syncReady.current = false; return; }
     (async () => {
+      const local = useAppStore.getState();
       const remote = await loadProfile(user.id);
-      if (remote) {
+      // Cloud profile/context only overwrite a still-pristine local state;
+      // otherwise local edits win and get pushed on the next sync tick.
+      const localPristine = !local.context.mood && local.context.genres.length === 0;
+      if (remote && localPristine) {
         setProfile(remote.profile);
         setContext(remote.context);
       }
       const remoteSaved = await loadSaved(user.id);
-      if (remoteSaved.length) remoteSaved.forEach(addSaved);
+      remoteSaved.forEach(addSaved); // union by card id (addSaved dedupes)
       const remoteHistory = await loadHistory(user.id);
-      if (remoteHistory.length) setSwipeHistory(remoteHistory);
+      if (remoteHistory.length) {
+        setSwipeHistory(mergeHistories(useAppStore.getState().swipeHistory, remoteHistory));
+      }
+      syncReady.current = true;
       setToast(t("app.toast.cloudLoaded"));
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Sync to Supabase when state changes (debounced via useEffect)
+  // Sync to Supabase when state changes (debounced; gated on initial load)
   useEffect(() => {
     if (!user) return;
     const timer = setTimeout(() => {
+      if (!syncReady.current) return;
       syncProfile(user.id, profile, context).catch(console.error);
     }, 1000);
     return () => clearTimeout(timer);
@@ -91,6 +101,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     const timer = setTimeout(() => {
+      if (!syncReady.current) return;
       syncSaved(user.id, saved).catch(console.error);
     }, 1500);
     return () => clearTimeout(timer);
@@ -99,6 +110,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     const timer = setTimeout(() => {
+      if (!syncReady.current) return;
       syncHistory(user.id, swipeHistory).catch(console.error);
     }, 1500);
     return () => clearTimeout(timer);

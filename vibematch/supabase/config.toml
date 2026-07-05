@@ -1,0 +1,14 @@
+# Edge function auth: every function requires at least the anon key JWT.
+# ai-tip / delete-account additionally verify a REAL user token in code.
+
+[functions.tmdb]
+verify_jwt = true
+
+[functions.places]
+verify_jwt = true
+
+[functions.ai-tip]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true

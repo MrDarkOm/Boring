@@ -1,6 +1,27 @@
 #!/usr/bin/env node
 // Build script for Capacitor iOS/Android production releases
 // Usage: node scripts/build-native.mjs [ios|android|both]
+//
+// ── Deep links (OAuth/magic-link callback, src/lib/deepLinks.ts) ──
+// After the first `cap sync`, register the custom scheme in the native shells:
+//
+// iOS — ios/App/App/Info.plist:
+//   <key>CFBundleURLTypes</key>
+//   <array><dict>
+//     <key>CFBundleURLSchemes</key><array><string>vibematch</string></array>
+//   </dict></array>
+//
+// Android — android/app/src/main/AndroidManifest.xml (inside MainActivity):
+//   <intent-filter>
+//     <action android:name="android.intent.action.VIEW" />
+//     <category android:name="android.intent.category.DEFAULT" />
+//     <category android:name="android.intent.category.BROWSABLE" />
+//     <data android:scheme="vibematch" android:host="auth-callback" />
+//   </intent-filter>
+//
+// Also add vibematch://auth-callback to Supabase Auth → URL Configuration →
+// Redirect URLs. For Apple Sign-In, enable the Apple provider in Supabase
+// (needs an Apple Services ID + key from developer.apple.com).
 
 import { execSync } from "child_process";
 

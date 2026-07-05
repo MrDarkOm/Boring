@@ -17,16 +17,12 @@ export async function createCoopSession(hostId: string): Promise<string | null> 
 }
 
 // ─── Join a coop session (guest) ──────────────────────────────────────────────
-export async function joinCoopSession(code: string, guestId: string): Promise<string | null> {
-  const { data, error } = await supabase!
-    .from("coop_sessions")
-    .update({ guest_id: guestId, status: "active" })
-    .eq("code", code)
-    .eq("status", "waiting")
-    .select("id")
-    .single();
+// Atomic security-definer RPC: only a genuinely waiting, guestless room owned
+// by someone else can be joined (see 002_sync_and_coop_fixes.sql).
+export async function joinCoopSession(code: string, _guestId: string): Promise<string | null> {
+  const { data, error } = await supabase!.rpc("join_coop_session", { p_code: code });
   if (error) return null;
-  return data?.id ?? null;
+  return (data as string | null) ?? null;
 }
 
 // ─── Get session by code ──────────────────────────────────────────────────────

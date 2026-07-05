@@ -4,9 +4,11 @@ import App from "./App";
 import { AuthProvider } from "./hooks/AuthProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initSentry } from "./lib/sentry";
+import { initDeepLinks } from "./lib/deepLinks";
 import "./index.css";
 
 initSentry();
+initDeepLinks(); // native OAuth/magic-link callback (no-op on web)
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

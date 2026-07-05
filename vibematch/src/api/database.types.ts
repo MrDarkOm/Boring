@@ -38,12 +38,15 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
+          record_id: string;
           card_id: number;
           card_data: Record<string, unknown>;
           direction: "left" | "right" | "up";
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["swipe_history"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["swipe_history"]["Row"], "id" | "created_at"> & {
+          created_at?: string;
+        };
         Update: Partial<Database["public"]["Tables"]["swipe_history"]["Insert"]>;
         Relationships: [];
       };
@@ -77,7 +80,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      join_coop_session: {
+        Args: { p_code: string };
+        Returns: string | null;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

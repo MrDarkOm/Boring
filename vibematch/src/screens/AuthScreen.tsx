@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../api/supabase";
+import { AUTH_CALLBACK_URL, isNative } from "../lib/deepLinks";
 import { F } from "../lib";
 import { t } from "../i18n";
 
@@ -13,6 +14,11 @@ export function AuthScreen({ onSkip }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Native uses the custom-scheme PKCE callback handled in lib/deepLinks.ts;
+  // web redirects to the app origin (never location.href — hash/query would
+  // break the code exchange).
+  const redirectTo = isNative() ? AUTH_CALLBACK_URL : window.location.origin;
+
   const sendMagicLink = async () => {
     if (!email.trim()) return;
     if (!supabase) { setError(t("auth.notConfigured")); return; }
@@ -20,19 +26,25 @@ export function AuthScreen({ onSkip }: Props) {
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.href },
+      options: { emailRedirectTo: redirectTo },
     });
     setLoading(false);
     if (err) setError(err.message);
     else setSent(true);
   };
 
-  const signInWithGoogle = async () => {
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.href },
+  const signInWithOAuth = async (provider: "google" | "apple") => {
+    if (!supabase) { setError(t("auth.notConfigured")); return; }
+    setError(null);
+    const { data, error: err } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo, skipBrowserRedirect: isNative() },
     });
+    if (err) { setError(err.message); return; }
+    if (isNative() && data?.url) {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url: data.url });
+    }
   };
 
   return (
@@ -82,15 +94,27 @@ export function AuthScreen({ onSkip }: Props) {
           <div style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,.25)", marginBottom: 12 }}>{t("common.or")}</div>
 
           <button
-            onClick={signInWithGoogle}
+            onClick={() => signInWithOAuth("google")}
             style={{
               width: "100%", padding: "14px 0",
               background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.15)",
               borderRadius: 14, color: "#fff", fontWeight: 600, fontSize: 14,
-              cursor: "pointer", fontFamily: F,
+              cursor: "pointer", fontFamily: F, marginBottom: 10,
             }}
           >
             {t("auth.google")}
+          </button>
+
+          <button
+            onClick={() => signInWithOAuth("apple")}
+            style={{
+              width: "100%", padding: "14px 0",
+              background: "#fff", border: "none",
+              borderRadius: 14, color: "#000", fontWeight: 700, fontSize: 14,
+              cursor: "pointer", fontFamily: F,
+            }}
+          >
+            {t("auth.apple")}
           </button>
         </div>
       )}

@@ -7,8 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "server": "node server/proxy.mjs",
-    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write src",
@@ -20,7 +18,9 @@
     "build:android": "node scripts/build-native.mjs android"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.0",
     "@capacitor/app-launcher": "^8.0.1",
+    "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/geolocation": "^8.2.0",

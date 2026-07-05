@@ -31,9 +31,10 @@ export function fmtDist(m: number): string {
   return m < 1000 ? `${m}м` : `${(m / 1000).toFixed(1)}км`;
 }
 
-// ─── AI tip via local proxy (server/proxy.mjs) ───────────────────────────────
-// The proxy injects the API key; the browser never sees it.
-// Rate limit: max 5 calls per session (stored in sessionStorage).
+// ─── AI tip via the authenticated Supabase edge function (ai-tip) ────────────
+// The Anthropic key lives in function secrets; requires a signed-in user.
+// Client-side soft cap: max 5 calls per session (sessionStorage) on top of
+// the server's 20/day limit.
 const AI_RATE_KEY = "vm_ai_calls";
 const AI_RATE_LIMIT = 5;
 
@@ -53,14 +54,29 @@ export async function fetchAiTip(
   weatherLabel: string
 ): Promise<string | null> {
   if (aiRateLimitExceeded()) return null;
+  const base = import.meta.env.VITE_SUPABASE_URL;
+  if (!base) return null;
+
+  // AI tips require a signed-in user: the edge function checks the JWT
+  // and enforces a 20/day server-side limit on top of the session cap.
+  const { supabase } = await import("../api/supabase");
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+
   const liked = history.filter((h) => h.dir === "right").map((h) => h.card.title);
   const disliked = history.filter((h) => h.dir === "left").map((h) => h.card.title);
   try {
-    const res = await fetch("/api/ai-tip", {
+    const res = await fetch(`${base}/functions/v1/ai-tip`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? "",
+      },
       body: JSON.stringify({ liked, disliked, context, weather: weatherLabel, locale: getLocale() }),
     });
+    if (!res.ok) return null;
     const data = await res.json();
     if (data?.tip) incrementAiCalls();
     return data?.tip || null;

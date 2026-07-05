@@ -3,6 +3,8 @@ import type { GeoState, Notifs, Profile, Weather } from "../types";
 import { WEATHERS } from "../data";
 import { F } from "../lib";
 import { t, getLocale, setLocale, type Locale } from "../i18n";
+import { useAuth } from "../hooks/useAuth";
+import { signOut, deleteAccount } from "../api/account";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -37,6 +39,18 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs, onNotifs, onBack, onReset, geoState }: Props) {
   const [name, setName] = useState(profile.name);
   const [editName, setEditName] = useState(false);
+  const { user } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+  const [accError, setAccError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!window.confirm(t("settings.deleteConfirm"))) return;
+    setDeleting(true);
+    setAccError(null);
+    const ok = await deleteAccount();
+    setDeleting(false);
+    if (!ok) setAccError(t("settings.deleteFailed"));
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
@@ -77,6 +91,27 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
             </button>
           ))}
         </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.account")}</div>
+        <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "14px 18px", marginBottom: 20 }}>
+          {user ? (
+            <>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", fontFamily: F }}>{t("settings.signedInAs")}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: F, margin: "3px 0 12px", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email ?? user.id}</div>
+              {accError && <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 10, fontFamily: F }}>{accError}</div>}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="action-btn" onClick={() => signOut()} style={{ flex: 1, padding: "11px 0", background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.14)", borderRadius: 12, color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}>
+                  {t("settings.logout")}
+                </button>
+                <button className="action-btn" onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: "11px 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 12, color: "#EF4444", fontWeight: 600, fontSize: 13, cursor: deleting ? "default" : "pointer", fontFamily: F, opacity: deleting ? 0.6 : 1 }}>
+                  {t("settings.deleteAccount")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", fontFamily: F, lineHeight: 1.6 }}>{t("settings.guest")}</div>
+          )}
+        </div>
+
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>{t("settings.weather")}</div>
         <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "16px 18px", marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 4, fontFamily: F }}>{t("settings.weatherHint")}</div>

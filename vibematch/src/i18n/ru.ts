@@ -357,4 +357,15 @@ export const ru = {
   "app.splashTagline": "найди чем заняться",
   "err.title": "Что-то пошло не так",
   "err.retry": "Попробовать снова",
+
+  // ── Account (phase 5) ──
+  "auth.apple": " Войти через Apple",
+  "settings.account": "Аккаунт",
+  "settings.signedInAs": "Вы вошли как",
+  "settings.guest": "Без аккаунта — данные только на этом устройстве",
+  "settings.logout": "Выйти",
+  "settings.deleteAccount": "Удалить аккаунт",
+  "settings.deleteConfirm": "Удалить аккаунт и все данные в облаке? Это действие необратимо.",
+  "settings.deleteFailed": "Не удалось удалить аккаунт",
+  "app.toast.loggedOut": "Вы вышли из аккаунта",
 } as const;
