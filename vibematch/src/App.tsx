@@ -163,7 +163,7 @@ export default function App() {
         }}
       >
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
-        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} allCards={allCards} />}
+        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} allCards={allCards} weather={weather} geo={geo} />}
         {ctxSheet && <ContextSheet context={context} onSave={setContext} onClose={() => setCtxSheet(false)} />}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>

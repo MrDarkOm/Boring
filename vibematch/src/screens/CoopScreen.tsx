@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Card } from "../types";
 import { getStaticCards } from "../data";
+import { rankDeck } from "../lib/recommend";
 import { t, useLocale } from "../i18n";
 import { F } from "../lib";
 import { Glow, Tag } from "../components/ui";
@@ -23,8 +24,14 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   const locale = useLocale();
-  // Both participants share the same deterministic deck (matching is by card id)
-  const deck = useMemo(() => getStaticCards(locale), [locale]);
+  // Personalized order, ranked ONCE per session start; participants may see
+  // different orders — matching is by card id, so that's fine
+  const deck = useMemo(() => {
+    const { context, swipeHistory } = useAppStore.getState();
+    const neutral = { id: "any", emoji: "", label: "", temp: 0, desc: "" };
+    return rankDeck(getStaticCards(locale), context, neutral, swipeHistory, { explore: false }).cards;
+     
+  }, [locale]);
   const card = deck[idx % deck.length];
   const isAuthed = !!user;
 

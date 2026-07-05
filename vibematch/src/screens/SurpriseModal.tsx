@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import type { Card } from "../types";
+import type { Card, Geo, Weather } from "../types";
 import { getStaticCards } from "../data";
 import { F } from "../lib";
-import { rankCards } from "../lib/scoring";
+import { rankDeck, buildRestartPool, softmaxPick } from "../lib/recommend";
 import { useAppStore } from "../store";
 import { t } from "../i18n";
 
@@ -12,10 +12,14 @@ export function SurpriseModal({
   onClose,
   onMatch,
   allCards,
+  weather,
+  geo = null,
 }: {
   onClose: () => void;
   onMatch: (c: Card) => void;
   allCards?: Card[];
+  weather: Weather;
+  geo?: Geo | null;
 }) {
   const [step, setStep] = useState(0);
   const [pick, setPick] = useState<Card | null>(null);
@@ -33,19 +37,14 @@ export function SurpriseModal({
 
     timers.push(
       setTimeout(() => {
-        // Use scoring engine: rank all unseen cards by context/weather/history
+        // Recommendation engine with REAL weather; dislikes are excluded
+        // (or demoted when the pool is tiny), pick via softmax over the top 5
         const savedIds = new Set(saved.map((s) => s.id));
         const swipedIds = new Set(swipeHistory.map((h) => h.card.id));
         const unseen = cards.filter((c) => !savedIds.has(c.id) && !swipedIds.has(c.id));
-        const pool = unseen.length > 0 ? unseen : cards;
-
-        // Default weather for scoring when no weather data available
-        const weather = { id: "any", emoji: "🌤", label: "любая", temp: 0, desc: "" };
-        const ranked = rankCards(pool, context, weather, swipeHistory);
-
-        // Pick from the top 3 to keep some surprise
-        const topN = ranked.slice(0, Math.min(3, ranked.length));
-        setPick(topN[Math.floor(Math.random() * topN.length)]);
+        const { pool, demote } = buildRestartPool(unseen.length > 0 ? unseen : cards, swipeHistory);
+        const ranked = rankDeck(pool, context, weather, swipeHistory, { geo, demote, explore: false });
+        setPick(softmaxPick(ranked.cards, ranked.scores));
       }, LOADING_STEP_KEYS.length * 600 + 200)
     );
 

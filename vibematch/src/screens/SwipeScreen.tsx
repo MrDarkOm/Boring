@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import type { Card, Category, Geo, SwipeDir, SwipeRecord, UserContext, Weather } from "../types";
 import { MOODS, CAT_META } from "../data";
 import { F, fetchAiTip } from "../lib";
-import { rankCards, scoreCard } from "../lib/scoring";
+import { rankDeck, rerankTail, matchPercent, buildRestartPool, type RankedDeck } from "../lib/recommend";
 import { openAction } from "../lib/actions";
 import { t, type TKey } from "../i18n";
 import { Glow, Tag } from "../components/ui";
@@ -48,24 +48,26 @@ export function SwipeScreen({
   const [catFilter, setCatFilter] = useState<CatFilter>("all");
   const startRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Full scoring engine: weather + genres + time-of-day + mood + swipe-history learning
-  const cards = useMemo(() => {
+  // Recommendation engine: base scorer + decayed feature learning + exploration.
+  // Deck lives in state so each swipe can re-rank the unseen tail.
+  const [deckState, setDeckState] = useState<RankedDeck>({ cards: [], scores: new Map(), mean: 0, std: 0 });
+  const cards = deckState.cards;
+
+  useEffect(() => {
     const pool = catFilter === "all" ? allCards : allCards.filter((c) => c.cat === catFilter);
-    return rankCards(pool, context, weather, swipeHistory);
-    // Re-rank only when context/weather/filter changes (not every swipe to avoid flicker)
+    setDeckState(rankDeck(pool, context, weather, swipeHistory, { geo: _geo }));
+    setIdx(0);
+    setDeckDone(false);
+    setOff({ x: 0, y: 0 });
+    // swipeHistory intentionally excluded: per-swipe learning goes through rerankTail
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allCards, context, weather, catFilter]);
 
   const card = deckDone ? null : cards[idx];
   const nextC = cards[(idx + 1) % Math.max(cards.length, 1)];
 
-  // Match percentage from the scoring engine (normalized to feel meaningful)
-  const matchPct = useMemo(() => {
-    if (!card) return 0;
-    const s = scoreCard(card, context, weather, swipeHistory);
-    return Math.min(99, Math.max(52, Math.round(55 + s * 4.2)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card?.id, context, weather]);
+  // Honest match %: sigmoid over the card's z-score within this deck
+  const matchPct = card ? matchPercent(deckState.scores.get(card.id) ?? deckState.mean, deckState.mean, deckState.std) : 0;
 
   const categories = useMemo(() => {
     const present = new Set(allCards.map((c) => c.cat));
@@ -73,10 +75,7 @@ export function SwipeScreen({
   }, [allCards]);
 
   const pickFilter = (f: CatFilter) => {
-    setCatFilter(f);
-    setIdx(0);
-    setDeckDone(false);
-    setOff({ x: 0, y: 0 });
+    setCatFilter(f); // the deck effect re-ranks and resets position
   };
 
   const triggerAI = useCallback(
@@ -102,6 +101,9 @@ export function SwipeScreen({
       const next = idx + 1;
       if (next >= cards.length) setDeckDone(true);
       else setIdx(next);
+      // Learn from this swipe now: freeze everything seen + the upcoming
+      // current/next pair, re-rank only the unseen tail (no visible jumps)
+      setDeckState((d) => ({ ...d, cards: rerankTail(d.cards, Math.min(next + 2, d.cards.length), context, weather, nh, { geo: _geo }) }));
       setOff({ x: 0, y: 0 });
       setExit(null);
     }, 290);
@@ -119,6 +121,10 @@ export function SwipeScreen({
   };
 
   const restartDeck = () => {
+    // Restart without disliked cards (demote them instead if too few remain)
+    const base = catFilter === "all" ? allCards : allCards.filter((c) => c.cat === catFilter);
+    const { pool, demote } = buildRestartPool(base, swipeHistory);
+    setDeckState(rankDeck(pool, context, weather, swipeHistory, { geo: _geo, demote }));
     setDeckDone(false);
     setIdx(0);
   };
