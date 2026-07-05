@@ -3,7 +3,8 @@ import type { Card, Geo } from "../types";
 import { getStaticCards } from "../data";
 import { useLocale } from "../i18n";
 import { fetchNearby } from "../lib/places";
-import { fetchTmdbCards, mergeCards } from "../api/content";
+import { fetchTmdbCards } from "../api/content";
+import { dedupeCards } from "../lib/dedupe";
 
 // Deck = static geo-independent catalog + REAL nearby places (Overpass,
 // client-side, no backend) + TMDB trending when a Supabase backend is configured.
@@ -36,7 +37,7 @@ export function useCards(geo: Geo | null): { cards: Card[]; loading: boolean } {
     return () => { cancelled = true; };
   }, [geo?.lat, geo?.lng, locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cards = useMemo(() => mergeCards(staticCards, remote), [staticCards, remote]);
+  const cards = useMemo(() => dedupeCards([...remote, ...staticCards]), [staticCards, remote]);
 
   return { cards, loading };
 }

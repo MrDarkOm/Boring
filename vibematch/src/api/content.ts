@@ -72,10 +72,3 @@ export async function fetchPlacesCards(geo: Geo, radius = 2000): Promise<RemoteC
     return [];
   }
 }
-
-// ─── Merge remote + static cards (dedup by id) ───────────────────────────────
-export function mergeCards(staticCards: Card[], remote: RemoteCard[]): Card[] {
-  const ids = new Set(staticCards.map((c) => c.id));
-  const newCards = remote.filter((c) => !ids.has(c.id));
-  return [...staticCards, ...newCards];
-}
