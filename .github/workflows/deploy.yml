@@ -1,0 +1,94 @@
+name: Deploy to boring.omlet.space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vibematch
+
+    steps:
+      - name: Check deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        working-directory: .
+        run: |
+          missing=""
+          [ -z "$DEPLOY_HOST" ]    && missing="$missing DEPLOY_HOST"
+          [ -z "$DEPLOY_USER" ]    && missing="$missing DEPLOY_USER"
+          [ -z "$DEPLOY_SSH_KEY" ] && missing="$missing DEPLOY_SSH_KEY"
+          [ -z "$DEPLOY_PATH" ]    && missing="$missing DEPLOY_PATH"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing"
+            echo "Add them in Settings -> Secrets and variables -> Actions:"
+            echo "  DEPLOY_HOST    — server hostname (e.g. omlet.space)"
+            echo "  DEPLOY_USER    — ssh user"
+            echo "  DEPLOY_SSH_KEY — private key whose public part is in the server's ~/.ssh/authorized_keys"
+            echo "  DEPLOY_PATH    — directory openresty serves for boring.omlet.space (e.g. /var/www/boring)"
+            exit 1
+          fi
+          echo "All deploy secrets present."
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: vibematch/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy dist via rsync
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          echo "Deployed to https://boring.omlet.space/"
+
+      - name: Verify live site
+        working-directory: .
+        run: |
+          sleep 3
+          served=$(curl -s --max-time 15 https://boring.omlet.space/ | grep -o 'assets/index-[^"]*\.js' | head -1 || true)
+          built=$(grep -o 'assets/index-[^"]*\.js' vibematch/dist/index.html | head -1)
+          echo "served: $served"
+          echo "built:  $built"
+          if [ -n "$built" ] && [ "$served" = "$built" ]; then
+            echo "✓ live site serves the fresh build"
+          else
+            echo "::warning::Served bundle does not match the fresh build (cache or wrong DEPLOY_PATH?)"
+          fi
