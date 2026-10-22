@@ -95,8 +95,8 @@ export default function App() {
             </>
           )}
 
-          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={addSaved} />}
-          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={addSaved} />}
+          {phase === "main" && matched && <MatchScreen card={matched} onBack={() => setMatch(null)} onSaved={addSaved} onNotify={setToast} />}
+          {phase === "main" && openSaved && <MatchScreen card={openSaved} onBack={() => setOpenSaved(null)} onSaved={addSaved} onNotify={setToast} />}
         </div>
 
         {phase === "main" && !matched && !openSaved && <NavBar tab={tab} setTab={setTab} />}

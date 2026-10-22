@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Geo, Place } from "../types";
 import { PLACES } from "../data";
-import { F, haversine, fmtDist } from "../lib";
+import { F, haversine, fmtDist, placeUrl, openLink } from "../lib";
 
 export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null }) {
   const [sel, setSel] = useState<Place | null>(null);
@@ -69,7 +69,7 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: F }}>{sel.name}</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,.38)", marginTop: 3 }}>{sel.distLabel} · ⭐ {sel.rating} · {sel.open ? "Открыто" : "Закрыто"}</div>
             </div>
-            <button className="action-btn" style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>→</button>
+            <button className="action-btn" onClick={() => openLink(placeUrl(sel))} style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>Маршрут →</button>
           </div>
         </div>
       )}

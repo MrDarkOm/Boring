@@ -1,41 +1,73 @@
 import { useState } from "react";
 import type { Card } from "../types";
 import { ALL_CARDS } from "../data";
-import { F } from "../lib";
+import { F, actionUrl, openLink } from "../lib";
 import { Glow, Tag } from "../components/ui";
 
-export function CoopScreen({ onBack }: { onBack: () => void }) {
-  const [phase, setPhase] = useState<"lobby" | "swipe" | "result">("lobby");
-  const [code] = useState(() => Math.random().toString(36).slice(2, 6).toUpperCase());
-  const [myLikes, setMyLikes] = useState<Card[]>([]);
-  const [idx, setIdx] = useState(0);
-  const [result, setResult] = useState<Card | null>(null);
+type Phase = "lobby" | "p1" | "handover" | "p2" | "result";
 
-  const card = ALL_CARDS[idx % ALL_CARDS.length];
+// Two players take turns on one device; the result is the real intersection of their "yes" answers.
+export function CoopScreen({ onBack }: { onBack: () => void }) {
+  const [phase, setPhase] = useState<Phase>("lobby");
+  const [idx, setIdx] = useState(0);
+  const [likes1, setLikes1] = useState<Card[]>([]);
+  const [likes2, setLikes2] = useState<Card[]>([]);
+
+  const card = ALL_CARDS[idx];
+  const player = phase === "p2" ? 2 : 1;
+  const common = likes1.filter((c) => likes2.some((p) => p.id === c.id));
+  const result = common[0] ?? null;
+
+  const reset = () => {
+    setIdx(0);
+    setLikes1([]);
+    setLikes2([]);
+    setPhase("lobby");
+  };
 
   const pick = (liked: boolean) => {
-    const nl = liked ? [...myLikes, card] : myLikes;
-    setMyLikes(nl);
-    if (idx + 1 >= ALL_CARDS.length) {
-      const partnerLikes = ALL_CARDS.filter(() => Math.random() > 0.45);
-      const match = nl.find((c) => partnerLikes.find((p) => p.id === c.id));
-      setTimeout(() => {
-        setResult(match || nl[0] || ALL_CARDS[0]);
-        setPhase("result");
-      }, 350);
-    }
-    setIdx((i) => i + 1);
+    if (liked) (player === 1 ? setLikes1 : setLikes2)((l) => [...l, card]);
+    if (idx + 1 < ALL_CARDS.length) return setIdx(idx + 1);
+    setIdx(0);
+    setPhase(player === 1 ? "handover" : "result");
   };
+
+  if (phase === "handover")
+    return (
+      <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", gap: 18, textAlign: "center", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
+        <div className="pop-in" style={{ fontSize: 54 }}>🤝</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>Первый игрок закончил</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.65, maxWidth: 290 }}>Передай телефон второму игроку. Его ответы скрыты от первого, поэтому выбирайте честно — совпадения покажем в конце.</div>
+        <button className="action-btn" onClick={() => setPhase("p2")} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 22px rgba(124,58,237,.4)" }}>Я второй игрок</button>
+      </div>
+    );
+
+  if (phase === "result" && !result)
+    return (
+      <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", gap: 18, textAlign: "center", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
+        <div className="pop-in" style={{ fontSize: 54 }}>🤷</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>Общих «да» не нашлось</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.65, maxWidth: 290 }}>Вкусы в этот раз не пересеклись. Попробуйте ещё раз и отвечайте посмелее — или бросьте кубик на главном экране.</div>
+        <button className="action-btn" onClick={reset} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F }}>Сыграть заново</button>
+        <button className="action-btn" onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,.35)", fontSize: 13, cursor: "pointer", fontFamily: F }}>← На главную</button>
+      </div>
+    );
 
   if (phase === "result" && result)
     return (
       <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", gap: 20, textAlign: "center", background: `linear-gradient(180deg,${result.bg} 0%,#0A0A0A 60%)` }}>
         <div className="pop-in" style={{ fontSize: 54 }}>🎯</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: result.color, textTransform: "uppercase", letterSpacing: 2.5 }}>Совпадение!</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: result.color, textTransform: "uppercase", letterSpacing: 2.5 }}>Совпадение! Общих «да»: {common.length}</div>
         <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>{result.title}</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.48)", lineHeight: 1.6, maxWidth: 300 }}>{result.desc}</div>
         <Tag>{result.tag}</Tag>
-        <button className="action-btn" style={{ padding: "14px 36px", background: result.color, border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, marginTop: 8 }}>{result.action} →</button>
+        {common.length > 1 && (
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", lineHeight: 1.6, maxWidth: 300 }}>
+            Ещё понравилось обоим: {common.slice(1).map((c) => c.title).join(", ")}
+          </div>
+        )}
+        <button className="action-btn" onClick={() => openLink(actionUrl(result))} style={{ padding: "14px 36px", background: result.color, border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, marginTop: 8 }}>{result.action} →</button>
+        <button className="action-btn" onClick={reset} style={{ background: "none", border: "none", color: "rgba(255,255,255,.5)", fontSize: 13, cursor: "pointer", fontFamily: F }}>Сыграть заново</button>
         <button className="action-btn" onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,.35)", fontSize: 13, cursor: "pointer", fontFamily: F }}>← На главную</button>
       </div>
     );
@@ -50,13 +82,8 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, textAlign: "center" }}>
           <div style={{ fontSize: 50 }}>👥</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: F }}>Найдите общий вайб</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", lineHeight: 1.65, maxWidth: 290 }}>Свайпайте независимо — найдём что понравилось обоим</div>
-          <div style={{ background: "rgba(124,58,237,.12)", border: "2px dashed rgba(124,58,237,.35)", borderRadius: 20, padding: "22px 40px" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginBottom: 7, letterSpacing: 1 }}>КОД КОМНАТЫ</div>
-            <div style={{ fontSize: 36, fontWeight: 900, color: "#A78BFA", letterSpacing: 5, fontFamily: F }}>{code}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.25)", marginTop: 6 }}>Поделись с другом</div>
-          </div>
-          <button className="action-btn" onClick={() => setPhase("swipe")} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 22px rgba(124,58,237,.4)" }}>Начать</button>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", lineHeight: 1.65, maxWidth: 290 }}>Сначала свайпает первый игрок, затем телефон переходит ко второму. В конце покажем то, что понравилось вам обоим.</div>
+          <button className="action-btn" onClick={() => setPhase("p1")} style={{ padding: "14px 40px", background: "#7C3AED", border: "none", borderRadius: 99, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 22px rgba(124,58,237,.4)" }}>Начать игру</button>
         </div>
       </div>
     );
@@ -64,7 +91,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
       <div style={{ padding: "50px 20px 10px", display: "flex", justifyContent: "space-between" }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>Твои свайпы</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>Игрок {player}</div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{idx}/{ALL_CARDS.length}</div>
       </div>
       <div style={{ flex: 1, position: "relative", margin: "0 16px 10px" }}>

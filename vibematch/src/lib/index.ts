@@ -1,4 +1,4 @@
-import type { SwipeRecord, UserContext } from "../types";
+import type { Card, Place, SwipeRecord, UserContext } from "../types";
 
 export const F = "Inter, system-ui, sans-serif";
 
@@ -49,5 +49,50 @@ export async function fetchAiTip(
     return data?.tip || null;
   } catch {
     return null;
+  }
+}
+
+// ─── Action links ────────────────────────────────────────────────────────────
+// Real search/deep links per category, so every "action" button leads somewhere.
+export function actionUrl(card: Card): string {
+  const q = encodeURIComponent(card.title.replace(/[«»]/g, "").replace(/\s*[−-]\d+%.*$/, ""));
+  switch (card.cat) {
+    case "film":
+      return `https://www.kinopoisk.ru/index.php?kp_query=${q}`;
+    case "game":
+      return `https://store.steampowered.com/search/?term=${q}`;
+    case "book":
+      return `https://www.litres.ru/search/?q=${q}`;
+    case "place":
+      return card.lat != null && card.lng != null
+        ? `https://yandex.ru/maps/?pt=${card.lng},${card.lat}&z=16&l=map`
+        : `https://yandex.ru/maps/?text=${q}`;
+    case "sale":
+    default:
+      return `https://yandex.ru/search/?text=${q}`;
+  }
+}
+
+export function placeUrl(p: Place): string {
+  return `https://yandex.ru/maps/?pt=${p.lng},${p.lat}&z=16&l=map`;
+}
+
+export function openLink(url: string): void {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+// Native share sheet where available, clipboard otherwise. Returns a user-facing message.
+export async function shareCard(card: Card): Promise<string> {
+  const text = `${card.emoji} ${card.title} — ${card.desc} (${card.tag})`;
+  const url = actionUrl(card);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: card.title, text, url });
+      return "Отправлено";
+    }
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    return "Описание и ссылка скопированы в буфер обмена";
+  } catch {
+    return "Не удалось поделиться — попробуй ещё раз";
   }
 }

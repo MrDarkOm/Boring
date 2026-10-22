@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import type { Card } from "../types";
-import { F } from "../lib";
+import { F, actionUrl, openLink, shareCard } from "../lib";
 import { Tag } from "../components/ui";
 
-export function MatchScreen({ card, onBack, onSaved }: { card: Card; onBack: () => void; onSaved: (c: Card) => void }) {
+export function MatchScreen({ card, onBack, onSaved, onNotify }: { card: Card; onBack: () => void; onSaved: (c: Card) => void; onNotify?: (m: string) => void }) {
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShown(true), 40);
@@ -50,15 +50,15 @@ export function MatchScreen({ card, onBack, onSaved }: { card: Card; onBack: () 
           <Tag>{card.tag}</Tag>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <button className="action-btn" style={{ padding: 14, background: card.color, border: "none", borderRadius: 14, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: `0 5px 22px ${card.color}50` }}>
+          <button className="action-btn" onClick={() => openLink(actionUrl(card))} style={{ padding: 14, background: card.color, border: "none", borderRadius: 14, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: F, boxShadow: `0 5px 22px ${card.color}50` }}>
             {card.action} →
           </button>
           <div style={{ display: "flex", gap: 9 }}>
             <button className="action-btn" onClick={() => { onSaved(card); onBack(); }} style={{ flex: 1, padding: 12, background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.22)", borderRadius: 14, color: "#A78BFA", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}>
               🔖 Сохранить
             </button>
-            <button className="action-btn" style={{ flex: 1, padding: 12, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 14, color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}>
-              👥 Поделиться
+            <button className="action-btn" onClick={async () => { const m = await shareCard(card); onNotify?.(m); }} style={{ flex: 1, padding: 12, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 14, color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: F }}>
+              📤 Поделиться
             </button>
           </div>
         </div>
