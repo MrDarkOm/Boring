@@ -10,13 +10,13 @@ function Stat({ label, value, color = "#A78BFA" }: { label: string; value: numbe
   );
 }
 
+const CAT_LABELS: Record<string, string> = { film: "Фильмы", place: "Места", sale: "Скидки", book: "Книги", game: "Игры" };
 const CAT_COLORS: Record<string, string> = {
-  Фильм: "#7C3AED",
-  Место: "#059669",
-  Скидка: "#E11D48",
-  Книга: "#D97706",
-  Игра: "#0EA5E9",
-  "Актив.": "#F59E0B",
+  Фильмы: "#7C3AED",
+  Места: "#059669",
+  Скидки: "#E11D48",
+  Книги: "#D97706",
+  Игры: "#0EA5E9",
 };
 
 export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]; saved: Card[]; onBack: () => void }) {
@@ -26,7 +26,8 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
 
   const catCounts: Record<string, number> = {};
   history.filter((h) => h.dir === "right").forEach((h) => {
-    catCounts[h.card.catLabel] = (catCounts[h.card.catLabel] || 0) + 1;
+    const label = CAT_LABELS[h.card.cat] || h.card.catLabel;
+    catCounts[label] = (catCounts[label] || 0) + 1;
   });
   const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
   const maxCat = catEntries[0]?.[1] || 1;
@@ -42,7 +43,7 @@ export function StatsScreen({ history, saved, onBack }: { history: SwipeRecord[]
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.45 }}>
             <div style={{ fontSize: 44 }}>📊</div>
             <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", fontFamily: F }}>Пока нет данных</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>Свайпай карточки чтобы увидеть статистику</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)" }}>Свайпни несколько карточек, и здесь появится статистика.</div>
           </div>
         ) : (
           <>

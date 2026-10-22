@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Card } from "../types";
-import { ALL_CARDS } from "../data";
+import { FALLBACK_CARDS } from "../data";
 import { F, actionUrl, openLink } from "../lib";
 import { Glow, Tag } from "../components/ui";
 
@@ -13,7 +13,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
   const [likes1, setLikes1] = useState<Card[]>([]);
   const [likes2, setLikes2] = useState<Card[]>([]);
 
-  const card = ALL_CARDS[idx];
+  const card = FALLBACK_CARDS[idx];
   const player = phase === "p2" ? 2 : 1;
   const common = likes1.filter((c) => likes2.some((p) => p.id === c.id));
   const result = common[0] ?? null;
@@ -27,7 +27,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
 
   const pick = (liked: boolean) => {
     if (liked) (player === 1 ? setLikes1 : setLikes2)((l) => [...l, card]);
-    if (idx + 1 < ALL_CARDS.length) return setIdx(idx + 1);
+    if (idx + 1 < FALLBACK_CARDS.length) return setIdx(idx + 1);
     setIdx(0);
     setPhase(player === 1 ? "handover" : "result");
   };
@@ -92,7 +92,7 @@ export function CoopScreen({ onBack }: { onBack: () => void }) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
       <div style={{ padding: "50px 20px 10px", display: "flex", justifyContent: "space-between" }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: F }}>Игрок {player}</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{idx}/{ALL_CARDS.length}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{idx}/{FALLBACK_CARDS.length}</div>
       </div>
       <div style={{ flex: 1, position: "relative", margin: "0 16px 10px" }}>
         <div className="card-in" style={{ position: "relative", borderRadius: 26, padding: 22, minHeight: 360, background: `linear-gradient(150deg,${card.bg} 0%,#0D0D12 100%)`, border: "1px solid rgba(255,255,255,.07)", display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden" }}>

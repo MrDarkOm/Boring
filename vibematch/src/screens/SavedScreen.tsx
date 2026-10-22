@@ -6,12 +6,12 @@ interface Props {
   saved: Card[];
   onBack: () => void;
   onOpen: (c: Card) => void;
-  comments: Record<number, string>;
-  onComment: (id: number, txt: string) => void;
+  comments: Record<string, string>;
+  onComment: (id: string, txt: string) => void;
 }
 
 export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Props) {
-  const [editing, setEditing] = useState<number | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
   return (
@@ -26,7 +26,7 @@ export function SavedScreen({ saved, onBack, onOpen, comments, onComment }: Prop
           <div className="fade-in" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.45 }}>
             <div style={{ fontSize: 44 }}>🔖</div>
             <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", fontFamily: F }}>Пока пусто</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)", textAlign: "center" }}>Свайпай вверх чтобы сохранить</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.28)", textAlign: "center" }}>Свайпни карточку вверх, чтобы сохранить её на потом.</div>
           </div>
         ) : (
           saved.map((c, i) => (

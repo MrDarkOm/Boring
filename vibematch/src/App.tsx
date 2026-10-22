@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { Card, Notifs, Profile, SwipeRecord, UserContext } from "./types";
 import { F } from "./lib";
 import { useGeoWeather } from "./hooks/useGeoWeather";
+import { useCards } from "./hooks/useCards";
 import { Splash } from "./screens/Splash";
 import { Onboarding } from "./screens/Onboarding";
 import { SwipeScreen } from "./screens/SwipeScreen";
@@ -23,16 +24,17 @@ export default function App() {
   const [saved, setSaved] = useState<Card[]>([]);
   const [swipeHistory, setHist] = useState<SwipeRecord[]>([]);
   const [openSaved, setOpenSaved] = useState<Card | null>(null);
-  const [comments, setComments] = useState<Record<number, string>>({});
+  const [comments, setComments] = useState<Record<string, string>>({});
   const [notifs, setNotifs] = useState<Notifs>({ evening: true, sales: true, places: false });
   const [profile, setProfile] = useState<Profile>({ name: "Пользователь", avatar: "🧑" });
   const [toast, setToast] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
 
   const { geo, weather, setWeather, geoState } = useGeoWeather();
+  const { cards: deck, status: sources, loading: deckLoading, reload } = useCards(geo, geoState !== "idle" && geoState !== "loading");
 
   const addSaved = (c: Card) => setSaved((s) => (s.find((x) => x.id === c.id) ? s : [...s, c]));
-  const addComment = (id: number, txt: string) => setComments((c) => ({ ...c, [id]: txt }));
+  const addComment = (id: string, txt: string) => setComments((c) => ({ ...c, [id]: txt }));
 
   useEffect(() => {
     if (phase === "main" && notifs.evening) {
@@ -65,7 +67,7 @@ export default function App() {
         }}
       >
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
-        {surprise && <SurpriseModal onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} />}
+        {surprise && <SurpriseModal deck={deck} onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} />}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           {phase === "splash" && <Splash onDone={() => setPhase("onboard")} />}
@@ -75,6 +77,9 @@ export default function App() {
             <>
               {tab === "swipe" && (
                 <SwipeScreen
+                  deck={deck}
+                  loading={deckLoading}
+                  onReload={reload}
                   context={context}
                   weather={weather}
                   geo={geo}
@@ -87,10 +92,10 @@ export default function App() {
                   onSurprise={() => setSurprise(true)}
                 />
               )}
-              {tab === "map" && <MapScreen onBack={() => setTab("swipe")} geo={geo} />}
+              {tab === "map" && <MapScreen onBack={() => setTab("swipe")} geo={geo} deck={deck} status={sources.places} onOpen={(c) => setOpenSaved(c)} />}
               {tab === "stats" && <StatsScreen history={swipeHistory} saved={saved} onBack={() => setTab("swipe")} />}
               {tab === "saved" && <SavedScreen saved={saved} onBack={() => setTab("swipe")} onOpen={(c) => setOpenSaved(c)} comments={comments} onComment={addComment} />}
-              {tab === "settings" && <SettingsScreen profile={profile} onProfile={setProfile} weather={weather} onWeather={setWeather} notifs={notifs} onNotifs={setNotifs} onBack={() => setTab("swipe")} onReset={handleReset} geoState={geoState} />}
+              {tab === "settings" && <SettingsScreen profile={profile} onProfile={setProfile} weather={weather} onWeather={setWeather} notifs={notifs} onNotifs={setNotifs} onBack={() => setTab("swipe")} onReset={handleReset} geoState={geoState} sources={sources} onReload={reload} />}
               {tab === "coop" && <CoopScreen onBack={() => setTab("swipe")} />}
             </>
           )}

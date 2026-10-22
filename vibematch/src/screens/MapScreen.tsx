@@ -1,10 +1,19 @@
 import { useState } from "react";
-import type { Geo, Place } from "../types";
-import { PLACES } from "../data";
-import { F, haversine, fmtDist, placeUrl, openLink } from "../lib";
+import type { Card, Geo, SourceStatus } from "../types";
+import { F, haversine, fmtDist, actionUrl, openLink, isOpenNow } from "../lib";
 
-export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null }) {
-  const [sel, setSel] = useState<Place | null>(null);
+interface Props {
+  onBack: () => void;
+  geo: Geo | null;
+  deck: Card[];
+  status: SourceStatus;
+  onOpen: (c: Card) => void;
+}
+
+type MapPlace = Card & { lat: number; lng: number; distLabel: string; open: boolean | null };
+
+export function MapScreen({ onBack, geo, deck, status, onOpen }: Props) {
+  const [sel, setSel] = useState<MapPlace | null>(null);
 
   const userLat = geo?.lat || 55.751;
   const userLng = geo?.lng || 37.618;
@@ -17,10 +26,15 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
   const toX = (lng: number) => Math.max(2, Math.min(98, ((lng - minLng) / (maxLng - minLng)) * 100));
   const toY = (lat: number) => Math.max(2, Math.min(96, (1 - (lat - minLat) / (maxLat - minLat)) * 100));
 
-  const places: Place[] = PLACES.map((p) => {
-    const distM = geo ? haversine(userLat, userLng, p.lat, p.lng) : null;
-    return { ...p, distM, distLabel: distM ? fmtDist(distM) : p.dist };
-  }).sort((a, b) => (a.distM || 99999) - (b.distM || 99999));
+  const places: MapPlace[] = deck
+    .filter((c): c is Card & { lat: number; lng: number } => c.cat === "place" && c.lat != null && c.lng != null)
+    .map((p) => {
+      const distM = haversine(userLat, userLng, p.lat, p.lng);
+      return { ...p, distM, distLabel: fmtDist(distM), open: isOpenNow(p.openingHours) };
+    })
+    .sort((a, b) => a.distM - b.distM);
+  const dotColor = (o: boolean | null) => (o === true ? "#22C55E" : o === false ? "#EF4444" : "rgba(255,255,255,.25)");
+  const openLabel = (o: boolean | null) => (o === true ? "Открыто" : o === false ? "Закрыто" : "Часы не указаны");
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "linear-gradient(180deg,#0D0D18 0%,#0D0D0D 100%)" }}>
@@ -55,7 +69,7 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
         {places.map((p) => (
           <div key={p.id} onClick={() => setSel(sel?.id === p.id ? null : p)} style={{ position: "absolute", left: `${toX(p.lng)}%`, top: `${toY(p.lat)}%`, transform: "translate(-50%,-100%)", cursor: "pointer", zIndex: 5 }}>
             <div style={{ background: p.color, borderRadius: 99, padding: "4px 9px", fontSize: 13, display: "flex", alignItems: "center", gap: 3, boxShadow: `0 2px 10px ${p.color}55`, border: sel?.id === p.id ? "2px solid #fff" : "2px solid transparent", transition: "all .2s" }}>
-              <span>{p.cat}</span>
+              <span>{p.emoji}</span>
             </div>
             <div style={{ width: 2, height: 5, background: p.color, margin: "0 auto" }} />
           </div>
@@ -66,23 +80,37 @@ export function MapScreen({ onBack, geo }: { onBack: () => void; geo: Geo | null
         <div className="fade-up" style={{ margin: "12px 16px 0", background: "rgba(255,255,255,.05)", border: `1px solid ${sel.color}30`, borderRadius: 18, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: F }}>{sel.name}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,.38)", marginTop: 3 }}>{sel.distLabel} · ⭐ {sel.rating} · {sel.open ? "Открыто" : "Закрыто"}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: F }}>{sel.title}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.38)", marginTop: 3 }}>{sel.catLabel} · {sel.distLabel} · {openLabel(sel.open)}</div>
             </div>
-            <button className="action-btn" onClick={() => openLink(placeUrl(sel))} style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>Маршрут →</button>
+            <button className="action-btn" onClick={() => openLink(actionUrl(sel))} style={{ padding: "8px 14px", background: sel.color, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>Маршрут →</button>
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", lineHeight: 1.55, marginTop: 10 }}>{sel.desc}</div>
+          <div style={{ display: "flex", gap: 14, marginTop: 10 }}>
+            <button className="action-btn" onClick={() => onOpen(sel)} style={{ background: "none", border: "none", padding: 0, color: "#A78BFA", fontSize: 12, cursor: "pointer", fontFamily: F }}>Подробнее</button>
+            {sel.site && <button className="action-btn" onClick={() => openLink(sel.site!)} style={{ background: "none", border: "none", padding: 0, color: "rgba(255,255,255,.45)", fontSize: 12, cursor: "pointer", fontFamily: F }}>Сайт заведения ↗</button>}
           </div>
         </div>
       )}
 
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 24px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {places.length === 0 && (
+          <div style={{ textAlign: "center", padding: "28px 12px", color: "rgba(255,255,255,.4)", fontSize: 13, lineHeight: 1.6, fontFamily: F }}>
+            {status.state === "loading"
+              ? "Ищу места рядом в OpenStreetMap…"
+              : !geo
+                ? "Разреши доступ к геолокации, чтобы увидеть реальные места рядом с тобой."
+                : `Не удалось загрузить места: ${status.reason || "OpenStreetMap не ответил"}. Попробуй обновить позже.`}
+          </div>
+        )}
         {places.map((p) => (
           <div key={p.id} className="action-btn" onClick={() => setSel(sel?.id === p.id ? null : p)} style={{ display: "flex", gap: 12, alignItems: "center", background: sel?.id === p.id ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.04)", border: `1px solid ${sel?.id === p.id ? "rgba(255,255,255,.14)" : "rgba(255,255,255,.06)"}`, borderRadius: 14, padding: "12px 14px", cursor: "pointer", transition: "all .2s" }}>
-            <span style={{ fontSize: 22 }}>{p.cat}</span>
+            <span style={{ fontSize: 22 }}>{p.emoji}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)", marginTop: 2 }}>{p.distLabel} · ⭐ {p.rating}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F }}>{p.title}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)", marginTop: 2 }}>{p.catLabel} · {p.distLabel} · {openLabel(p.open)}</div>
             </div>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.open ? "#22C55E" : "#EF4444" }} />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor(p.open) }} />
           </div>
         ))}
       </div>

@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import type { Card } from "../types";
-import { ALL_CARDS } from "../data";
 import { F } from "../lib";
 
-export function SurpriseModal({ onClose, onMatch }: { onClose: () => void; onMatch: (c: Card) => void }) {
+export function SurpriseModal({ deck, onClose, onMatch }: { deck: Card[]; onClose: () => void; onMatch: (c: Card) => void }) {
   const [loading, setLoading] = useState(true);
   const [pick, setPick] = useState<Card | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setPick(ALL_CARDS[Math.floor(Math.random() * ALL_CARDS.length)]);
+      setPick(deck.length ? deck[Math.floor(Math.random() * deck.length)] : null);
       setLoading(false);
     }, 1200);
     return () => clearTimeout(t);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fade-in" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.78)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24, backdropFilter: "blur(10px)" }}>
@@ -23,6 +22,12 @@ export function SurpriseModal({ onClose, onMatch }: { onClose: () => void; onMat
             <div style={{ fontSize: 48, marginBottom: 14, animation: "splashPulse 1s ease-in-out infinite" }}>🎲</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: F }}>Бросаю кубик...</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,.35)", marginTop: 6 }}>ищу что-то неожиданное</div>
+          </div>
+        ) : !pick ? (
+          <div style={{ textAlign: "center", padding: "16px 0" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: F, marginBottom: 8 }}>Подборка ещё загружается</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)", marginBottom: 18 }}>Попробуй бросить кубик через пару секунд.</div>
+            <button className="action-btn" onClick={onClose} style={{ padding: "11px 28px", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, color: "#fff", fontSize: 13, cursor: "pointer", fontFamily: F }}>Закрыть</button>
           </div>
         ) : (
           pick && (
@@ -35,6 +40,7 @@ export function SurpriseModal({ onClose, onMatch }: { onClose: () => void; onMat
                 <div style={{ fontSize: 11, color: pick.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>{pick.emoji} {pick.catLabel}</div>
                 <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", fontFamily: F, marginBottom: 7 }}>{pick.title}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,.48)", lineHeight: 1.6 }}>{pick.desc}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", marginTop: 8 }}>{pick.tag}</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="action-btn" onClick={() => { onMatch(pick); onClose(); }} style={{ flex: 2, padding: 13, background: pick.color, border: "none", borderRadius: 13, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: F }}>Попробую!</button>

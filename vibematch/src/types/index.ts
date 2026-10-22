@@ -1,7 +1,7 @@
 export type Category = "film" | "place" | "sale" | "book" | "game";
 
 export interface Card {
-  id: number;
+  id: string;
   cat: Category;
   emoji: string;
   catLabel: string;
@@ -16,6 +16,25 @@ export interface Card {
   weather: string[];
   lat?: number;
   lng?: number;
+  /** Ссылка для кнопки действия; без неё строится поиск по названию */
+  url?: string;
+  /** Постер / обложка / скриншот */
+  image?: string;
+  /** Откуда карточка: OpenStreetMap, Steam, TMDB, Open Library… */
+  source?: string;
+  /** Для мест: сайт, часы работы в формате OSM, расстояние и тип */
+  site?: string;
+  openingHours?: string;
+  distM?: number;
+  placeKind?: string;
+}
+
+export type SourceName = "places" | "steam" | "films" | "books";
+
+export interface SourceStatus {
+  state: "loading" | "ok" | "error" | "off";
+  count?: number;
+  reason?: string;
 }
 
 export interface Mood {
@@ -31,20 +50,6 @@ export interface Weather {
   label: string;
   temp: number;
   desc: string;
-}
-
-export interface Place {
-  id: number;
-  name: string;
-  cat: string;
-  dist: string;
-  rating: number;
-  open: boolean;
-  lat: number;
-  lng: number;
-  color: string;
-  distM?: number | null;
-  distLabel?: string;
 }
 
 export interface Geo {

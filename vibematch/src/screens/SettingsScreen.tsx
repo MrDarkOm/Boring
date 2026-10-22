@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { GeoState, Notifs, Profile, Weather } from "../types";
+import type { GeoState, Notifs, Profile, SourceName, SourceStatus, Weather } from "../types";
 import { WEATHERS } from "../data";
 import { F } from "../lib";
 import type { ReactNode } from "react";
@@ -14,6 +14,22 @@ interface Props {
   onBack: () => void;
   onReset: () => void;
   geoState: GeoState;
+  sources: Record<SourceName, SourceStatus>;
+  onReload: () => void;
+}
+
+const SOURCE_INFO: Record<SourceName, { label: string; provider: string }> = {
+  places: { label: "Места рядом", provider: "OpenStreetMap" },
+  steam: { label: "Игры и скидки", provider: "Steam" },
+  films: { label: "Фильмы", provider: "TMDB" },
+  books: { label: "Книги", provider: "Google Books / Open Library" },
+};
+
+function sourceText(s: SourceStatus, name: SourceName): { text: string; color: string } {
+  if (s.state === "loading") return { text: "загружаю…", color: "rgba(255,255,255,.35)" };
+  if (s.state === "ok") return { text: `${s.count} шт`, color: "#22C55E" };
+  if (s.state === "off") return { text: s.reason || "не настроено", color: "#F59E0B" };
+  return { text: name === "places" ? "не загрузились" : "ошибка, показываю встроенные", color: "#EF4444" };
 }
 
 function Row({ label, children, border = true }: { label: string; children: ReactNode; border?: boolean }) {
@@ -33,7 +49,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs, onNotifs, onBack, onReset, geoState }: Props) {
+export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs, onNotifs, onBack, onReset, geoState, sources, onReload }: Props) {
   const [name, setName] = useState(profile.name);
   const [editName, setEditName] = useState(false);
 
@@ -77,6 +93,25 @@ export function SettingsScreen({ profile, onProfile, weather, onWeather, notifs,
               </button>
             ))}
           </div>
+        </div>
+
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Источники данных</div>
+        <div style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "4px 18px 14px", marginBottom: 20 }}>
+          {(Object.keys(SOURCE_INFO) as SourceName[]).map((k) => {
+            const t = sourceText(sources[k], k);
+            return (
+              <Row key={k} label={`${SOURCE_INFO[k].label} · ${SOURCE_INFO[k].provider}`}>
+                <span style={{ fontSize: 11, color: t.color, fontFamily: F, textAlign: "right", maxWidth: 130 }}>{t.text}</span>
+              </Row>
+            );
+          })}
+          {sources.films.state === "off" && (
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", lineHeight: 1.55, marginTop: 10, fontFamily: F }}>
+              Фильмы из TMDB появятся, когда в файл .env будет добавлен TMDB_API_KEY. Пока показывается встроенная подборка.
+            </div>
+          )}
+          <div style={{ height: 12 }} />
+          <button className="action-btn" onClick={onReload} style={{ width: "100%", padding: 10, background: "rgba(124,58,237,.15)", border: "1px solid rgba(124,58,237,.3)", borderRadius: 10, color: "#C4B5FD", fontSize: 12, cursor: "pointer", fontFamily: F, fontWeight: 600 }}>Обновить данные</button>
         </div>
 
         <div style={{ fontSize: 11, color: "rgba(255,255,255,.28)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8, fontFamily: F }}>Уведомления</div>
