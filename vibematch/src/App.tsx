@@ -51,21 +51,8 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0" }}>
-      <div
-        style={{
-          width: 390,
-          minHeight: 844,
-          background: "#0D0D0D",
-          borderRadius: 46,
-          overflow: "hidden",
-          position: "relative",
-          fontFamily: F,
-          boxShadow: "0 40px 130px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.06)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+    <div className="app-shell">
+      <div className="app-frame" style={{ fontFamily: F }}>
         {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
         {surprise && <SurpriseModal deck={deck} onClose={() => setSurprise(false)} onMatch={(c) => { setMatch(c); setSurprise(false); }} />}
 

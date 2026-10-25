@@ -1,0 +1,53 @@
+# Автодеплой Вайбматча на свой сервер по SSH.
+# Нужны секреты репозитория (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST     — IP или домен сервера
+#   DEPLOY_USER     — пользователь SSH
+#   DEPLOY_SSH_KEY  — приватный ключ SSH (весь текст, включая BEGIN/END)
+#   DEPLOY_PORT     — порт SSH (необязательно, по умолчанию 22)
+# Пока секретов нет, workflow просто пропускает деплой.
+name: Deploy VibeMatch
+
+on:
+  push:
+    branches: [main, claude/vigilant-brahmagupta-zr2qoy]
+    paths: ["vibematch/**", ".github/workflows/deploy-vibematch.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vibematch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vibematch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: vibematch/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Есть ли секреты для деплоя
+        id: secrets
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: echo "ok=$([ -n "$HOST" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: Обновить сервер
+        if: steps.secrets.outputs.ok == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: bash /opt/boring/vibematch/deploy/update.sh ${{ github.ref_name }}

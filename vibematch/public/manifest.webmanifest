@@ -1,0 +1,11 @@
+{
+  "name": "Вайбматч",
+  "short_name": "Вайбматч",
+  "description": "Свайпай фильмы, места рядом, игры и книги и находи, чем заняться прямо сейчас.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
+  "lang": "ru",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
