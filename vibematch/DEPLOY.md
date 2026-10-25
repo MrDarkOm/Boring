@@ -1,4 +1,4 @@
-# Развёртывание на boring.omelt.space
+# Развёртывание на boring.omlet.space
 
 Приложение — один Node-процесс (`server/proxy.mjs`): он отдаёт собранный сайт
 из `dist/` и API `/api/*`. Перед ним стоит nginx или Caddy с HTTPS.
@@ -6,17 +6,20 @@
 > **HTTPS обязателен.** Без него телефон не даст геолокацию, и не будет ни
 > мест рядом, ни погоды.
 
-Ниже инструкция для VPS на Ubuntu/Debian с доступом по SSH.
+Ниже инструкция для VPS на Ubuntu/Debian с доступом по SSH. Если
+разворачивает Claude на самом сервере — дай ему файл
+[`deploy/VPS_CLAUDE.md`](deploy/VPS_CLAUDE.md): там пошаговый план под
+openresty, который уже обслуживает домен.
 
 ## 1. DNS
 
 У регистратора домена добавь A-запись:
 
 ```
-boring.omelt.space  →  <IP сервера>
+boring.omlet.space  →  <IP сервера>
 ```
 
-(и AAAA-запись, если у сервера есть IPv6). Проверка: `ping boring.omelt.space`.
+(и AAAA-запись, если у сервера есть IPv6). Проверка: `ping boring.omlet.space`.
 
 ## 2. Код и ключи на сервере
 
@@ -64,17 +67,18 @@ sudo cp /opt/boring/vibematch/deploy/Caddyfile /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
 
-**Вариант nginx** (если nginx уже стоит):
+**Вариант nginx / openresty** (если он уже стоит и занимает 80/443 —
+тогда Caddy не ставь; у openresty тот же синтаксис конфига):
 
 ```bash
-sudo cp /opt/boring/vibematch/deploy/nginx.conf /etc/nginx/sites-available/boring.omelt.space
-sudo ln -s /etc/nginx/sites-available/boring.omelt.space /etc/nginx/sites-enabled/
+sudo cp /opt/boring/vibematch/deploy/nginx.conf /etc/nginx/sites-available/boring.omlet.space
+sudo ln -s /etc/nginx/sites-available/boring.omlet.space /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d boring.omelt.space
+sudo certbot --nginx -d boring.omlet.space
 ```
 
-Открой https://boring.omelt.space с телефона и разреши геолокацию.
+Открой https://boring.omlet.space с телефона и разреши геолокацию.
 Чтобы было похоже на приложение: «Поделиться» → «На экран „Домой“».
 
 ## 5. Обновления
@@ -91,7 +95,7 @@ bash /opt/boring/vibematch/deploy/update.sh
 
 | Секрет | Значение |
 |---|---|
-| `DEPLOY_HOST` | IP сервера или `boring.omelt.space` |
+| `DEPLOY_HOST` | IP сервера или `boring.omlet.space` |
 | `DEPLOY_USER` | пользователь SSH |
 | `DEPLOY_SSH_KEY` | приватный ключ, чей публичный ключ лежит в `~/.ssh/authorized_keys` на сервере |
 | `DEPLOY_PORT` | порт SSH, если не 22 |

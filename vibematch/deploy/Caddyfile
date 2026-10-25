@@ -1,5 +1,5 @@
 # Caddy сам получит и будет продлевать HTTPS-сертификат Let's Encrypt.
-boring.omelt.space {
+boring.omlet.space {
 	encode gzip zstd
 	reverse_proxy 127.0.0.1:8787
 }
